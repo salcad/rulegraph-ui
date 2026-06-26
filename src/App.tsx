@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FirmId, GraphView, ReportBundle } from "./types";
-import { loadFirms, loadGraph, loadReport } from "./api";
+import { loadGraph, loadReport } from "./api";
 import { Header } from "./components/Header";
 import { FiguresTable } from "./components/FiguresTable";
 import { ReconciliationView } from "./components/ReconciliationView";
@@ -31,15 +31,10 @@ const TABS: { id: Tab; label: string }[] = [
 
 export function App() {
   const [firm, setFirm] = useState<FirmId>("firm_A");
-  const [firms, setFirms] = useState<FirmId[]>(["firm_A", "firm_B"]);
   const [tab, setTab] = useState<Tab>("figures");
   const [bundle, setBundle] = useState<ReportBundle | null>(null);
   const [graph, setGraph] = useState<GraphView | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadFirms().then(setFirms).catch(() => {});
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -51,13 +46,6 @@ export function App() {
       active = false;
     };
   }, [firm]);
-
-  // A method saved from the DSL tab: refresh the switcher and jump to the new firm's figures.
-  const onFirmSaved = (savedFirm: FirmId, updatedFirms: FirmId[]) => {
-    setFirms(updatedFirms);
-    setFirm(savedFirm);
-    setTab("figures");
-  };
 
   // Load the graph the first time the Traceability tab (which holds the overview graph) is opened.
   useEffect(() => {
@@ -90,7 +78,7 @@ export function App() {
 
   return (
     <div className="app">
-      <Header firm={firm} firms={firms} onFirm={setFirm} bundle={bundle} />
+      <Header firm={firm} onFirm={setFirm} bundle={bundle} />
 
       <nav className="tabs">
         {TABS.map((t) => (
@@ -110,7 +98,7 @@ export function App() {
       {tab === "firewall" && <FirewallView firewall={bundle.firewall} />}
       {tab === "audit" && <AuditView events={bundle.audit} />}
       {tab === "source" && <SourcePdfView />}
-      {tab === "method" && <MethodStudio onSaved={onFirmSaved} />}
+      {tab === "method" && <MethodStudio />}
     </div>
   );
 }

@@ -26,18 +26,26 @@ interface Pos {
   y: number;
 }
 
+// Minimum centre-to-centre distance enforced after the force layout, so circles (and their labels)
+// don't sit on top of each other on the initial render.
+const NODE_SEP = 38;
+
 /** Fruchterman-Reingold layout. Deterministic start (no randomness) so the picture is stable. */
 function layout(nodes: GraphNode[], edges: GraphEdge[], height: number): Record<string, Pos> {
   const pos: Record<string, Pos> = {};
   const n = nodes.length || 1;
+  // Deterministic phyllotaxis (golden-angle) spiral start: nodes begin spread across the plane
+  // instead of stacked on a single ring, which the force step then refines.
   nodes.forEach((node, i) => {
-    const a = (2 * Math.PI * i) / n;
-    pos[node.id] = { x: WIDTH / 2 + Math.cos(a) * 250, y: height / 2 + Math.sin(a) * (height / 3) };
+    const a = i * 2.399963229728653; // golden angle in radians
+    const r = NODE_SEP * Math.sqrt(i + 1);
+    pos[node.id] = { x: WIDTH / 2 + Math.cos(a) * r, y: height / 2 + Math.sin(a) * r };
   });
 
-  const area = WIDTH * height;
-  const k = Math.sqrt(area / n) * 0.7;
-  let temp = WIDTH / 8;
+  // Ideal edge length. Kept fairly tight so clusters stay compact; the anti-overlap pass below is
+  // what guarantees nodes don't actually touch, so we don't need wide spacing here.
+  const k = Math.sqrt((WIDTH * height) / n) * 0.4;
+  let temp = WIDTH / 10;
   const iterations = 400;
 
   for (let it = 0; it < iterations; it++) {
@@ -79,19 +87,77 @@ function layout(nodes: GraphNode[], edges: GraphEdge[], height: number): Record<
       disp[e.target].y += dy;
     }
 
-    // Apply, limited by temperature, kept in bounds.
+    // Apply, limited by temperature. Not clamped to the viewBox: we let the graph use whatever space
+    // it needs and fit the camera to it afterwards, so a crowded graph spreads out instead of piling
+    // up against the edges.
     for (const v of nodes) {
       const d = disp[v.id];
       const len = Math.hypot(d.x, d.y) || 0.01;
       const p = pos[v.id];
       p.x += (d.x / len) * Math.min(len, temp);
       p.y += (d.y / len) * Math.min(len, temp);
-      p.x = Math.max(30, Math.min(WIDTH - 30, p.x));
-      p.y = Math.max(24, Math.min(height - 24, p.y));
     }
     temp *= 0.97;
   }
+
+  // Anti-overlap relaxation: push apart any pair still closer than NODE_SEP. A handful of passes is
+  // enough to clear the residual collisions the force step leaves behind.
+  for (let pass = 0; pass < 80; pass++) {
+    let moved = false;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = pos[nodes[i].id];
+        const b = pos[nodes[j].id];
+        let dx = a.x - b.x;
+        let dy = a.y - b.y;
+        const dist = Math.hypot(dx, dy) || 0.01;
+        if (dist < NODE_SEP) {
+          const push = (NODE_SEP - dist) / 2;
+          dx = (dx / dist) * push;
+          dy = (dy / dist) * push;
+          a.x += dx;
+          a.y += dy;
+          b.x -= dx;
+          b.y -= dy;
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
   return pos;
+}
+
+/**
+ * Camera transform (zoom + pan) that frames the whole laid-out graph inside the viewBox with a
+ * margin, so the initial render shows everything without overlap. Accounts for the label that
+ * extends to the right of each node so long labels aren't clipped.
+ */
+function fitView(nodes: GraphNode[], pos: Record<string, Pos>, height: number): { zoom: number; pan: Pos } {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const node of nodes) {
+    const p = pos[node.id];
+    if (!p) continue;
+    minX = Math.min(minX, p.x - 12);
+    minY = Math.min(minY, p.y - 14);
+    maxX = Math.max(maxX, p.x + 12 + node.label.length * 5.2); // rough label width at fontSize 9
+    maxY = Math.max(maxY, p.y + 14);
+  }
+  if (!Number.isFinite(minX)) return { zoom: 1, pan: { x: 0, y: 0 } };
+
+  const pad = 24;
+  const w = maxX - minX || 1;
+  const h = maxY - minY || 1;
+  // Fit to the tighter axis; never zoom in past 1:1 on first render.
+  const zoom = clampZoom(Math.min((WIDTH - 2 * pad) / w, (height - 2 * pad) / h, 1));
+  const pan = {
+    x: (WIDTH - w * zoom) / 2 - minX * zoom,
+    y: (height - h * zoom) / 2 - minY * zoom,
+  };
+  return { zoom, pan };
 }
 
 /**
@@ -130,6 +196,8 @@ function matchNode(nodes: GraphNode[], query: string): GraphNode | undefined {
 export function GraphPanel({ graph, height = 600, showHint = true, focus = null }: GraphPanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const base = useMemo(() => layout(graph.nodes, graph.edges, height), [graph, height]);
+  // Camera that frames the whole laid-out graph; used for the initial render and the Reset button.
+  const fit = useMemo(() => fitView(graph.nodes, base, height), [graph.nodes, base, height]);
   const [pos, setPos] = useState<Record<string, Pos>>(base);
   const [drag, setDrag] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
@@ -139,8 +207,9 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
   const [notFound, setNotFound] = useState<string | null>(null);
 
   // Zoom/pan over the whole picture. `pan` is in viewBox units, `zoom` is a scale factor.
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState<Pos>({ x: 0, y: 0 });
+  // Start framed on the whole graph so nothing overlaps or sits off-screen on first render.
+  const [zoom, setZoom] = useState(fit.zoom);
+  const [pan, setPan] = useState<Pos>(fit.pan);
   // While the background is being dragged, remember where the drag started so pan tracks the cursor.
   const panStart = useRef<{ svg: Pos; pan: Pos } | null>(null);
 
@@ -202,11 +271,22 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
   };
 
   const resetView = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    setPos(base);
+    setZoom(fit.zoom);
+    setPan(fit.pan);
     setFocused(null);
     setNotFound(null);
   };
+
+  // When the graph (and thus its layout) changes, snap positions and the camera back to the fresh
+  // fit. Also fixes stale positions, since useState ignores a changed initial value after mount.
+  useEffect(() => {
+    setPos(base);
+    setZoom(fit.zoom);
+    setPan(fit.pan);
+    setFocused(null);
+    setNotFound(null);
+  }, [base, fit]);
 
   // Centre the view on the node a query refers to and ring it. Used by both the search box and the
   // external `focus` prop. Reads `pos` so it lands on the node's current (possibly dragged) position.

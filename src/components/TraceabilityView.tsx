@@ -29,9 +29,6 @@ export function TraceabilityView({ report, graph }: TraceabilityViewProps) {
       <div className="trace-layout">
         <section className="trace-graph-col">
           <h3 className="section-title">Graph overview</h3>
-          <p className="hint section-sub">
-            Click a source chunk in the table, or use the search box, to locate it here.
-          </p>
           {graph ? (
             <GraphPanel graph={graph} focus={focus} height={480} showHint={false} />
           ) : (

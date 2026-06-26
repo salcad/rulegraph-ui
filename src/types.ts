@@ -87,8 +87,7 @@ export interface ReportBundle {
   audit: AuditEvent[];
 }
 
-// A firm id. Open-ended: besides the bundled firm_A / firm_B, firms can be saved from the method DSL.
-export type FirmId = string;
+export type FirmId = "firm_A" | "firm_B";
 
 // Firm-method mini-DSL live preview (the "Method DSL" tab).
 export interface DslError {

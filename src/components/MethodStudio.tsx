@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FirmId, FirmMethodPreview } from "../types";
-import { loadFirmMethodDsl, previewFirmMethod, readable, saveFirmMethod } from "../api";
+import { loadFirmMethodDsl, previewFirmMethod, readable } from "../api";
 import { StatusBadge } from "./StatusBadge";
-
-interface Props {
-  /** Called after a method is saved as a firm, with the saved id and the refreshed firm list. */
-  onSaved?: (firm: FirmId, firms: FirmId[]) => void;
-}
 
 const STARTER = [
   "# Express a firm's method, one directive per line.",
@@ -23,13 +18,11 @@ const STARTER = [
  * a plain-English reading of the conventions, and the figures those conventions would produce
  * against the current graph. Compiling is pure configuration; no calculator code changes.
  */
-export function MethodStudio({ onSaved }: Props) {
+export function MethodStudio() {
   const [dsl, setDsl] = useState<string>(STARTER);
   const [preview, setPreview] = useState<FirmMethodPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState<string | null>(null);
   const debounce = useRef<number | undefined>(undefined);
 
   // Debounced live compile: re-preview ~350ms after the last keystroke.
@@ -47,26 +40,10 @@ export function MethodStudio({ onSaved }: Props) {
   }, [dsl]);
 
   const loadTemplate = (firm: FirmId) => {
-    setSaved(null);
     loadFirmMethodDsl(firm)
       .then(setDsl)
       .catch((e) => setError(String(e)));
   };
-
-  const save = () => {
-    setSaving(true);
-    setError(null);
-    setSaved(null);
-    saveFirmMethod(dsl)
-      .then((res) => {
-        setSaved(res.firm_id);
-        onSaved?.(res.firm_id, res.firms);
-      })
-      .catch((e) => setError(String(e)))
-      .finally(() => setSaving(false));
-  };
-
-  const canSave = !!preview?.valid && !busy && !saving;
 
   return (
     <div className="studio">
@@ -74,11 +51,8 @@ export function MethodStudio({ onSaved }: Props) {
         <span className="studio-hint">Load a template:</span>
         <button onClick={() => loadTemplate("firm_A")}>Firm A</button>
         <button onClick={() => loadTemplate("firm_B")}>Firm B</button>
-        <button className="primary" disabled={!canSave} onClick={save}>
-          {saving ? "Saving…" : "Save as firm"}
-        </button>
         <span className={`studio-status ${busy ? "busy" : ""}`}>
-          {saved ? `saved ${saved}` : busy ? "compiling…" : preview?.valid ? "compiled" : "—"}
+          {busy ? "compiling…" : preview?.valid ? "compiled" : "—"}
         </span>
       </div>
 
