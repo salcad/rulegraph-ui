@@ -1,0 +1,483 @@
+{
+  "firm" : {
+    "firm_id" : "firm_B",
+    "include_fallen_angels" : true,
+    "gre_group_by" : "PARENT_ISSUER",
+    "utilization_format" : "TRUNCATED_BPS"
+  },
+  "figures" : [ {
+    "figure" : "singapore_government_securities",
+    "value" : "35.0%",
+    "status" : "OK",
+    "limit" : "20–60%",
+    "utilization" : "5833 bps",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass:singapore_government_securities)-[:HAS_LIMIT]->(Limit:singapore_government_securities)-[:DEFINED_BY]->(GuidelineChunk:chunk_1cc8)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 1,
+      "chunk_id" : "chunk_1cc8",
+      "passage_summary" : "Singapore Government Securities (SGS) 20% 60% AAA-rated only"
+    },
+    "numeric_value" : 35.000000000000
+  }, {
+    "figure" : "mas_bills",
+    "value" : "8.0%",
+    "status" : "OK",
+    "limit" : "0–40%",
+    "utilization" : "2000 bps",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass:mas_bills)-[:HAS_LIMIT]->(Limit:mas_bills)-[:DEFINED_BY]->(GuidelineChunk:chunk_9ed1)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 1,
+      "chunk_id" : "chunk_9ed1",
+      "passage_summary" : "MAS Bills 0% 40% Liquidity buffer"
+    },
+    "numeric_value" : 8.000000000000
+  }, {
+    "figure" : "investment_grade_corporate_bonds",
+    "value" : "33.0%",
+    "status" : "OK",
+    "limit" : "10–50%",
+    "utilization" : "6600 bps",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass:investment_grade_corporate_bonds)-[:HAS_LIMIT]->(Limit:investment_grade_corporate_bonds)-[:DEFINED_BY]->(GuidelineChunk:chunk_4b1d)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 1,
+      "chunk_id" : "chunk_4b1d",
+      "passage_summary" : "Investment Grade Corporate Bonds 10% 50% Min BBB- (S&P / Moody's)"
+    },
+    "numeric_value" : 33.000000000000
+  }, {
+    "figure" : "high_yield",
+    "value" : "9.0%",
+    "status" : "OK",
+    "limit" : "0–15%",
+    "utilization" : "6000 bps",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass:high_yield)-[:HAS_LIMIT]->(Limit:high_yield)-[:DEFINED_BY]->(GuidelineChunk:chunk_8954)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 1,
+      "chunk_id" : "chunk_8954",
+      "passage_summary" : "High Yield Bonds 0% 15% Max BB+ rating; APAC issuers only"
+    },
+    "numeric_value" : 9.000000000000
+  }, {
+    "figure" : "foreign_currency_bonds",
+    "value" : "5.0%",
+    "status" : "OK",
+    "limit" : "0–20%",
+    "utilization" : "2500 bps",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass:foreign_currency_bonds)-[:HAS_LIMIT]->(Limit:foreign_currency_bonds)-[:DEFINED_BY]->(GuidelineChunk:chunk_b9cd)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_b9cd",
+      "passage_summary" : "Foreign Currency Bonds (hedged) 0% 20% Currency risk must be fully hedged"
+    },
+    "numeric_value" : 5.000000000000
+  }, {
+    "figure" : "structured_credit",
+    "value" : "6.0%",
+    "status" : "OK",
+    "limit" : "0–10%",
+    "utilization" : "6000 bps",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass:structured_credit)-[:HAS_LIMIT]->(Limit:structured_credit)-[:DEFINED_BY]->(GuidelineChunk:chunk_19c4)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_19c4",
+      "passage_summary" : "Structured Credit (ABS/MBS) 0% 10% AAA tranche only; pre-approved list"
+    },
+    "numeric_value" : 6.000000000000
+  }, {
+    "figure" : "cash",
+    "value" : "4.0%",
+    "status" : "BREACH",
+    "limit" : "5–25%",
+    "utilization" : "n/a",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass:cash)-[:HAS_LIMIT]->(Limit:cash)-[:DEFINED_BY]->(GuidelineChunk:chunk_a84b)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_a84b",
+      "passage_summary" : "Cash &amp; Cash Equivalents 5% 25% Minimum liquidity floor"
+    },
+    "numeric_value" : 4.000000000000
+  }, {
+    "figure" : "aggregate_non_ig_exposure",
+    "value" : "21.0%",
+    "status" : "BREACH",
+    "limit" : "max 20%",
+    "utilization" : "10500 bps",
+    "graph_path" : "(AssetClass:structured_credit)-[:CONTRIBUTES_TO]->(Aggregate:aggregate_non_ig_exposure) , (AssetClass:high_yield)-[:CONTRIBUTES_TO]->(Aggregate:aggregate_non_ig_exposure) -[:DEFINED_BY]->(GuidelineChunk:chunk_1813) (+ fallen-angel Positions via downgraded_from)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_1813",
+      "passage_summary" : "Note: Aggregate exposure to non-investment-grade instruments (High Yield + St..."
+    },
+    "numeric_value" : 21.000000000000
+  }, {
+    "figure" : "single_corporate_issuer",
+    "value" : "8.0%",
+    "status" : "AT_LIMIT",
+    "limit" : "max 8%",
+    "utilization" : "10000 bps",
+    "graph_path" : "(Position)-[:ISSUED_BY]->(Issuer:Changi Logistics Pte Ltd) || (ConcentrationLimit:single_corporate_issuer)-[:DEFINED_BY]->(GuidelineChunk:chunk_01b5)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_01b5",
+      "passage_summary" : "Single Issuer Concentration: No single issuer (excluding Singapore Government..."
+    },
+    "numeric_value" : 8.000000000000
+  }, {
+    "figure" : "gre_issuer",
+    "value" : "13.0%",
+    "status" : "BREACH",
+    "limit" : "max 12%",
+    "utilization" : "10833 bps",
+    "graph_path" : "(Position)-[:ISSUED_BY]->(Issuer)-[:ROLLS_UP_TO]->(ParentIssuer:Redhill Holdings) || (ConcentrationLimit:gre_issuer)-[:DEFINED_BY]->(GuidelineChunk:chunk_f2e3)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_f2e3",
+      "passage_summary" : "than 8% of NAV. Government-related entities (GREs) are capped at 12% per issu..."
+    },
+    "numeric_value" : 13.000000000000
+  }, {
+    "figure" : "liquid_assets_ratio",
+    "value" : "47.0%",
+    "status" : "OK",
+    "limit" : "min 25%",
+    "utilization" : "18800 bps",
+    "graph_path" : "(AssetClass:cash)-[:CONTRIBUTES_TO]->(LiquidityFloor:liquid_assets_ratio) , (AssetClass:mas_bills)-[:CONTRIBUTES_TO]->(LiquidityFloor:liquid_assets_ratio) , (AssetClass:singapore_government_securities)-[:CONTRIBUTES_TO]->(LiquidityFloor:liquid_assets_ratio) -[:DEFINED_BY]->(GuidelineChunk:chunk_c54f)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_c54f",
+      "passage_summary" : "conditions. Liquid assets (SGS + MAS Bills + Cash) must constitute a minimum ..."
+    },
+    "numeric_value" : 47.000000000000
+  }, {
+    "figure" : "modified_duration",
+    "value" : "3.88 yrs",
+    "status" : "OK",
+    "limit" : "2.0–6.5 yrs",
+    "utilization" : "n/a",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass) || (RiskMetric:modified_duration)-[:HAS_THRESHOLD]->(Threshold)-[:DEFINED_BY]->(GuidelineChunk:chunk_2e98)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_2e98",
+      "passage_summary" : "Modified Duration 2.0 – 6.5 years Daily PM notification within 1h"
+    },
+    "numeric_value" : 3.88
+  }, {
+    "figure" : "portfolio_dv01",
+    "value" : "SGD 38,790 / bp",
+    "status" : "OK",
+    "limit" : "max 85,000",
+    "utilization" : "4563 bps",
+    "graph_path" : "(Position)-[:IN_ASSET_CLASS]->(AssetClass) || (RiskMetric:portfolio_dv01)-[:HAS_THRESHOLD]->(Threshold)-[:DEFINED_BY]->(GuidelineChunk:chunk_dfc2)",
+    "citation" : {
+      "source_doc" : "sample_fund_guidelines.pdf",
+      "page" : 2,
+      "chunk_id" : "chunk_dfc2",
+      "passage_summary" : "Portfolio DV01 ≤ SGD 85,000 per bp Daily Risk Committee alert"
+    },
+    "numeric_value" : 38790.00000
+  } ],
+  "reconciliation" : {
+    "lines" : [ {
+      "figure" : "singapore_government_securities",
+      "pass" : true,
+      "computed_value" : "35.0%",
+      "expected_value" : "35.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "mas_bills",
+      "pass" : true,
+      "computed_value" : "8.0%",
+      "expected_value" : "8.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "investment_grade_corporate_bonds",
+      "pass" : true,
+      "computed_value" : "33.0%",
+      "expected_value" : "33.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "high_yield",
+      "pass" : true,
+      "computed_value" : "9.0%",
+      "expected_value" : "9.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "foreign_currency_bonds",
+      "pass" : true,
+      "computed_value" : "5.0%",
+      "expected_value" : "5.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "structured_credit",
+      "pass" : true,
+      "computed_value" : "6.0%",
+      "expected_value" : "6.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "cash",
+      "pass" : true,
+      "computed_value" : "4.0%",
+      "expected_value" : "4.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "aggregate_non_ig_exposure",
+      "pass" : true,
+      "computed_value" : "21.0%",
+      "expected_value" : "21.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "single_corporate_issuer",
+      "pass" : true,
+      "computed_value" : "8.0%",
+      "expected_value" : "8.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "gre_issuer",
+      "pass" : true,
+      "computed_value" : "13.0%",
+      "expected_value" : "13.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "liquid_assets_ratio",
+      "pass" : true,
+      "computed_value" : "47.0%",
+      "expected_value" : "47.0%",
+      "delta" : 0E-12,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "modified_duration",
+      "pass" : true,
+      "computed_value" : "3.88 yrs",
+      "expected_value" : "3.88 yrs",
+      "delta" : 0.00,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    }, {
+      "figure" : "portfolio_dv01",
+      "pass" : true,
+      "computed_value" : "SGD 38,790 / bp",
+      "expected_value" : "SGD 38,790 / bp",
+      "delta" : 0.00000,
+      "value_match" : true,
+      "status_match" : true,
+      "utilization_match" : true
+    } ],
+    "passed" : 13,
+    "total" : 13
+  },
+  "traceability" : {
+    "lines" : [ {
+      "figure" : "singapore_government_securities",
+      "chunk_id" : "chunk_1cc8",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "mas_bills",
+      "chunk_id" : "chunk_9ed1",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "investment_grade_corporate_bonds",
+      "chunk_id" : "chunk_4b1d",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "high_yield",
+      "chunk_id" : "chunk_8954",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "foreign_currency_bonds",
+      "chunk_id" : "chunk_b9cd",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "structured_credit",
+      "chunk_id" : "chunk_19c4",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "cash",
+      "chunk_id" : "chunk_a84b",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "aggregate_non_ig_exposure",
+      "chunk_id" : "chunk_1813",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "single_corporate_issuer",
+      "chunk_id" : "chunk_01b5",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "gre_issuer",
+      "chunk_id" : "chunk_f2e3",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "liquid_assets_ratio",
+      "chunk_id" : "chunk_c54f",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "modified_duration",
+      "chunk_id" : "chunk_2e98",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    }, {
+      "figure" : "portfolio_dv01",
+      "chunk_id" : "chunk_dfc2",
+      "has_graph_path" : true,
+      "chunk_exists" : true,
+      "pass" : true
+    } ],
+    "passed" : 13,
+    "total" : 13
+  },
+  "firewall" : {
+    "narrative" : "Portfolio compliance commentary.\n\nThe cash is in breach at 4.0% against a limit of 5–25%.\nThe aggregate non ig exposure is in breach at 21.0% against a limit of max 20%.\nThe single corporate issuer sits at its limit of 8.0% against a limit of max 8%.\nThe gre issuer is in breach at 13.0% against a limit of max 12%.\n\nThe figures above are produced by the calculation engine; this commentary only describes them.",
+    "check" : {
+      "allowed_numbers" : 34,
+      "numbers_in_narrative" : 8,
+      "violations" : [ ],
+      "pass" : true
+    }
+  },
+  "audit" : [ {
+    "seq" : 1,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "RUN_STARTED",
+    "timestamp" : "2026-06-25T10:47:37.165357163Z",
+    "data" : {
+      "firm" : "firm_B"
+    }
+  }, {
+    "seq" : 2,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "CONFIG_CHANGED",
+    "timestamp" : "2026-06-25T10:47:37.305275399Z",
+    "data" : {
+      "gre_group_by" : "PARENT_ISSUER",
+      "utilization_format" : "TRUNCATED_BPS",
+      "firm" : "firm_B",
+      "include_fallen_angels" : true
+    }
+  }, {
+    "seq" : 3,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "GRAPH_CONSTRUCTED",
+    "timestamp" : "2026-06-25T10:47:39.293635743Z",
+    "data" : {
+      "graph_edges" : 59,
+      "chunks" : 100,
+      "graph_nodes" : 152,
+      "positions" : 13
+    }
+  }, {
+    "seq" : 4,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "FIGURES_COMPUTED",
+    "timestamp" : "2026-06-25T10:47:39.537282314Z",
+    "data" : {
+      "count" : 13
+    }
+  }, {
+    "seq" : 5,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "RECONCILED",
+    "timestamp" : "2026-06-25T10:47:39.610709542Z",
+    "data" : {
+      "total" : 13,
+      "firm" : "firm_B",
+      "all_pass" : true,
+      "passed" : 13
+    }
+  }, {
+    "seq" : 6,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "TRACEABILITY_CHECKED",
+    "timestamp" : "2026-06-25T10:47:39.760418281Z",
+    "data" : {
+      "all_pass" : true,
+      "passed" : 13,
+      "total" : 13
+    }
+  }, {
+    "seq" : 7,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "FIREWALL_CHECKED",
+    "timestamp" : "2026-06-25T10:47:39.763661701Z",
+    "data" : {
+      "numbers_in_narrative" : 8,
+      "violations" : [ ],
+      "pass" : true
+    }
+  }, {
+    "seq" : 8,
+    "run_id" : "firm_B-1782384457162",
+    "type" : "REPORT_EXPORTED",
+    "timestamp" : "2026-06-25T10:47:39.765426094Z",
+    "data" : {
+      "path" : "artifacts/exports/report-firm_B.json"
+    }
+  } ]
+}
