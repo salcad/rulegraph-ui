@@ -88,6 +88,29 @@ tbody tr.selected { background: #eef4fb; }
 .path { background: #f4f7fb; border: 1px solid var(--line); border-radius: 6px; padding: 10px; word-break: break-word; }
 .cite { border-left: 3px solid var(--accent); padding: 6px 10px; background: #f8fafc; border-radius: 0 6px 6px 0; }
 .cite .src { color: var(--muted); font-size: 12px; }
+.formula { border-left: 3px solid var(--accent); padding: 6px 10px; background: #f8fafc; border-radius: 0 6px 6px 0; }
+.formula > code { display: inline-block; padding: 2px 6px; background: #eef2f7; border: 1px solid var(--line); border-radius: 4px; }
+.formula .src { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.formula .subst { margin-top: 6px; color: var(--ink); font-size: 12px; word-break: break-word; }
+.formula .inputs { margin: 6px 0 0; padding-left: 16px; font-size: 12px; }
+.formula .inputs li { margin: 2px 0; }
+.formula .inputs code { padding: 1px 4px; background: #eef2f7; border: 1px solid var(--line); border-radius: 3px; }
+.formula .inputs .src { display: inline; margin: 0; }
+.formula .query { margin: 4px 0 8px; padding: 6px 8px; background: #0f172a; color: #e2e8f0; border-radius: 4px; font-size: 11px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+
+/* Glossary tab */
+.glossary-view { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; }
+.glossary-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.glossary-search { flex: 1 1 280px; max-width: 360px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
+.glossary-section { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
+.glossary-section h3 { margin: 0 0 4px; color: var(--accent); font-size: 15px; }
+.glossary-note { color: var(--muted); font-size: 12px; margin: 0 0 10px; max-width: 70ch; }
+.glossary-terms { margin: 0; }
+.glossary-row { display: grid; grid-template-columns: 220px 1fr; gap: 6px 18px; padding: 7px 0; border-bottom: 1px solid #f0f3f7; }
+.glossary-row:last-child { border-bottom: 0; }
+.glossary-row dt { color: var(--ink); font-size: 12px; font-weight: 600; word-break: break-word; }
+.glossary-row dd { margin: 0; color: var(--ink); font-size: 13px; line-height: 1.5; }
+@media (max-width: 640px) { .glossary-row { grid-template-columns: 1fr; gap: 2px; } }
 .hint { color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
 
 .narrative { white-space: pre-wrap; background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 14px; }

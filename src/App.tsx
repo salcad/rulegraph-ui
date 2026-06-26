@@ -9,6 +9,7 @@ import { FirewallView } from "./components/FirewallView";
 import { AuditView } from "./components/AuditView";
 import { SourcePdfView } from "./components/SourcePdfView";
 import { MethodStudio } from "./components/MethodStudio";
+import { Glossary } from "./components/Glossary";
 
 type Tab =
   | "figures"
@@ -17,7 +18,8 @@ type Tab =
   | "firewall"
   | "audit"
   | "source"
-  | "method";
+  | "method"
+  | "glossary";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "figures", label: "Figures" },
@@ -27,6 +29,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "audit", label: "Audit log" },
   { id: "source", label: "Source PDF" },
   { id: "method", label: "Method DSL" },
+  { id: "glossary", label: "Glossary" },
 ];
 
 export function App() {
@@ -99,6 +102,7 @@ export function App() {
       {tab === "audit" && <AuditView events={bundle.audit} />}
       {tab === "source" && <SourcePdfView />}
       {tab === "method" && <MethodStudio />}
+      {tab === "glossary" && <Glossary />}
     </div>
   );
 }

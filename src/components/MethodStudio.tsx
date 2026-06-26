@@ -14,7 +14,7 @@ const STARTER = [
 
 /**
  * The "Method DSL" tab: a small editor for the firm-method mini-DSL with a live preview. As the
- * analyst types, the draft is compiled by the backend into a firm config — showing per-line errors,
+ * analyst types, the draft is compiled by the backend into a firm config, showing per-line errors,
  * a plain-English reading of the conventions, and the figures those conventions would produce
  * against the current graph. Compiling is pure configuration; no calculator code changes.
  */
@@ -52,7 +52,7 @@ export function MethodStudio() {
         <button onClick={() => loadTemplate("firm_A")}>Firm A</button>
         <button onClick={() => loadTemplate("firm_B")}>Firm B</button>
         <span className={`studio-status ${busy ? "busy" : ""}`}>
-          {busy ? "compiling…" : preview?.valid ? "compiled" : "—"}
+          {busy ? "compiling…" : preview?.valid ? "compiled" : "idle"}
         </span>
       </div>
 
@@ -117,8 +117,8 @@ export function MethodStudio() {
                       {preview.figures.map((f) => (
                         <tr key={f.figure}>
                           <td>{readable(f.figure)}</td>
-                          <td className="mono">{f.value ?? "—"}</td>
-                          <td className="mono">{f.utilization ?? "—"}</td>
+                          <td className="mono">{f.value ?? "n/a"}</td>
+                          <td className="mono">{f.utilization ?? "n/a"}</td>
                           <td>
                             <StatusBadge status={f.status} />
                           </td>

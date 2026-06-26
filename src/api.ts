@@ -48,7 +48,7 @@ export async function loadFigureGraph(figure: string): Promise<GraphView> {
 /**
  * Compiles a firm-method DSL draft and returns the live preview: the resolved config, validation
  * errors, a plain-English explanation, and (best-effort) the figures those conventions produce.
- * Requires the live backend — the static-bundle fallback cannot recompute figures.
+ * Requires the live backend. The static-bundle fallback cannot recompute figures.
  */
 export async function previewFirmMethod(dsl: string): Promise<FirmMethodPreview> {
   const res = await fetch(`${API_BASE}/api/firm-method/preview`, {

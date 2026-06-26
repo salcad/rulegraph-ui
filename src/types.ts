@@ -9,12 +9,21 @@ export interface Citation {
   passage_summary: string;
 }
 
+export interface FigureInput {
+  name: string;
+  value: number;
+  description: string;
+  query: string;
+}
+
 export interface Figure {
   figure: string;
   value: string | null;
   status: FigureStatus;
   limit: string | null;
   utilization: string | null;
+  formula: string | null;
+  inputs: FigureInput[] | null;
   graph_path: string | null;
   citation: Citation | null;
   numeric_value: number | null;

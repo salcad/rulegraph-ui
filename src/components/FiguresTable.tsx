@@ -65,13 +65,13 @@ export function FiguresTable({ figures }: { figures: Figure[] }) {
     <>
       {table}
       {graphFor && (
-        <Modal title={`Trace graph — ${readable(graphFor.figure)}`} onClose={() => setGraphFor(null)}>
+        <Modal title={`Trace graph: ${readable(graphFor.figure)}`} onClose={() => setGraphFor(null)}>
           <FigureTraceGraph figure={graphFor.figure} />
         </Modal>
       )}
       {pdfFor && (
         <Modal
-          title={`Source — ${readable(pdfFor.figure)}`}
+          title={`Source: ${readable(pdfFor.figure)}`}
           onClose={() => setPdfFor(null)}
         >
           <Suspense fallback={<p className="hint">Loading viewer...</p>}>
