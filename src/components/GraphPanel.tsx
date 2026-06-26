@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GraphEdge, GraphNode, GraphView } from "../types";
 
 const WIDTH = 900;
@@ -94,22 +94,49 @@ function layout(nodes: GraphNode[], edges: GraphEdge[], height: number): Record<
   return pos;
 }
 
+/**
+ * A request to centre the view on a node, set from outside the panel (e.g. clicking a chunk_id in the
+ * traceability table). `nonce` changes on every request so repeating the same label re-fires the jump.
+ */
+export interface FocusRequest {
+  label: string;
+  nonce: number;
+}
+
 interface GraphPanelProps {
   graph: GraphView;
   height?: number;
   showHint?: boolean;
+  /** External "locate this node" request, matched against node labels (chunk_id is a node label). */
+  focus?: FocusRequest | null;
 }
 
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 6;
 const clampZoom = (z: number) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+// Zoom level we snap to when locating a node, unless the user is already zoomed in further.
+const LOCATE_ZOOM = 1.8;
 
-export function GraphPanel({ graph, height = 600, showHint = true }: GraphPanelProps) {
+/** Finds the node a search/locate query refers to: exact label match first, then a loose contains. */
+function matchNode(nodes: GraphNode[], query: string): GraphNode | undefined {
+  const q = query.trim().toLowerCase();
+  if (!q) return undefined;
+  return (
+    nodes.find((n) => n.label.toLowerCase() === q || n.id.toLowerCase() === q) ??
+    nodes.find((n) => n.label.toLowerCase().includes(q))
+  );
+}
+
+export function GraphPanel({ graph, height = 600, showHint = true, focus = null }: GraphPanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const base = useMemo(() => layout(graph.nodes, graph.edges, height), [graph, height]);
   const [pos, setPos] = useState<Record<string, Pos>>(base);
   const [drag, setDrag] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
+  // The node the user located most recently; it gets a ring so it stands out after the view jumps.
+  const [focused, setFocused] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [notFound, setNotFound] = useState<string | null>(null);
 
   // Zoom/pan over the whole picture. `pan` is in viewBox units, `zoom` is a scale factor.
   const [zoom, setZoom] = useState(1);
@@ -177,7 +204,39 @@ export function GraphPanel({ graph, height = 600, showHint = true }: GraphPanelP
   const resetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+    setFocused(null);
+    setNotFound(null);
   };
+
+  // Centre the view on the node a query refers to and ring it. Used by both the search box and the
+  // external `focus` prop. Reads `pos` so it lands on the node's current (possibly dragged) position.
+  const locate = useCallback(
+    (query: string) => {
+      const node = matchNode(graph.nodes, query);
+      if (!node || !pos[node.id]) {
+        setFocused(null);
+        setNotFound(query.trim());
+        return;
+      }
+      const p = pos[node.id];
+      const next = clampZoom(Math.max(zoom, LOCATE_ZOOM));
+      setZoom(next);
+      setPan({ x: WIDTH / 2 - p.x * next, y: height / 2 - p.y * next });
+      setFocused(node.id);
+      setNotFound(null);
+    },
+    [graph.nodes, pos, zoom, height]
+  );
+
+  // React to an external locate request (e.g. a chunk_id clicked in the traceability table).
+  useEffect(() => {
+    if (focus && focus.label) {
+      setSearch(focus.label);
+      locate(focus.label);
+    }
+    // Only re-fire when a new request arrives, not when `locate`'s closure changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.nonce]);
 
   const types = useMemo(
     () => Array.from(new Set(graph.nodes.map((n) => n.type))),
@@ -193,6 +252,28 @@ export function GraphPanel({ graph, height = 600, showHint = true }: GraphPanelP
           </span>
         ))}
       </div>
+
+      <form
+        className="graph-search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          locate(search);
+        }}
+      >
+        <input
+          type="text"
+          value={search}
+          placeholder="Find a node or chunk_id…"
+          onChange={(e) => {
+            setSearch(e.target.value);
+            if (notFound) setNotFound(null);
+          }}
+        />
+        <button type="submit">Locate</button>
+        {notFound !== null && (
+          <span className="graph-search-miss">No node matches “{notFound}”.</span>
+        )}
+      </form>
 
       <div className="panel graph-wrap">
         <div className="zoom-controls">
@@ -250,8 +331,11 @@ export function GraphPanel({ graph, height = 600, showHint = true }: GraphPanelP
                 onMouseEnter={() => setHover(node.id)}
                 onMouseLeave={() => setHover(null)}
               >
-                <circle r={hover === node.id ? 9 : 6} fill={colorFor(node.type)} stroke="#fff" strokeWidth={1.5} />
-                <text x={9} y={4} fontSize={9} fill="#1c2530">
+                {focused === node.id && (
+                  <circle className="graph-node-focus-ring" r={13} fill="none" stroke={colorFor(node.type)} strokeWidth={2} />
+                )}
+                <circle r={hover === node.id || focused === node.id ? 9 : 6} fill={colorFor(node.type)} stroke="#fff" strokeWidth={1.5} />
+                <text x={9} y={4} fontSize={9} fontWeight={focused === node.id ? 700 : 400} fill="#1c2530">
                   {node.label}
                 </text>
               </g>
