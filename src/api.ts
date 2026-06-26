@@ -1,4 +1,4 @@
-import type { FirmId, FirmMethodPreview, GraphView, ReportBundle } from "./types";
+import type { ExtractorMode, FirmId, FirmMethodPreview, GraphView, ReportBundle } from "./types";
 
 // Base URL for the engine's web API. Empty by default, so the front end calls the same origin and a
 // proxy (the Vite dev server, the nginx container, or a Vercel rewrite) forwards /api to the backend.
@@ -6,15 +6,35 @@ import type { FirmId, FirmMethodPreview, GraphView, ReportBundle } from "./types
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
 /**
+ * The result of loading a report: the bundle plus its source. {@code source} is {@code "live"} when
+ * the engine ran the pipeline for this request, or {@code "static"} when the backend was unreachable
+ * and we fell back to the bundle the engine previously exported. The caller uses this to warn that a
+ * requested LLM run did not actually execute.
+ */
+export interface ReportResult {
+  bundle: ReportBundle;
+  source: "live" | "static";
+}
+
+/**
  * Loads a firm's report bundle. It first asks the engine's web API to run the pipeline live; if the
  * backend is not reachable it falls back to the static bundle the engine exported (served from
  * public/data/). Either way the engine is the source of the figures.
+ *
+ * The {@code extractor} selects the rule extractor for the live run (hardcoded seed vs LLM). The
+ * static-bundle fallback was exported with whatever extractor the engine ran at export time and
+ * cannot honour this choice — so a request for an LLM run that lands on the fallback did not run the
+ * LLM at all, which the {@code source} field lets the caller flag.
  */
-export async function loadReport(firm: FirmId): Promise<ReportBundle> {
+export async function loadReport(firm: FirmId, extractor?: ExtractorMode): Promise<ReportResult> {
   try {
-    const live = await fetch(`${API_BASE}/api/report?firm=${firm}`);
+    const params = new URLSearchParams({ firm });
+    if (extractor) {
+      params.set("extractor", extractor);
+    }
+    const live = await fetch(`${API_BASE}/api/report?${params.toString()}`);
     if (live.ok) {
-      return (await live.json()) as ReportBundle;
+      return { bundle: (await live.json()) as ReportBundle, source: "live" };
     }
   } catch {
     // Backend not reachable; fall through to the static bundle.
@@ -24,7 +44,7 @@ export async function loadReport(firm: FirmId): Promise<ReportBundle> {
   if (!res.ok) {
     throw new Error(`Could not load report for ${firm} (${res.status})`);
   }
-  return (await res.json()) as ReportBundle;
+  return { bundle: (await res.json()) as ReportBundle, source: "static" };
 }
 
 /** Loads the knowledge graph for the Graph tab. */

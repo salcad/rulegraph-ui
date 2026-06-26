@@ -1,13 +1,15 @@
-import type { FirmId, ReportBundle } from "../types";
+import type { ExtractorMode, FirmId, ReportBundle } from "../types";
 
 interface Props {
   firm: FirmId;
   onFirm: (f: FirmId) => void;
+  extractor: ExtractorMode;
+  onExtractor: (e: ExtractorMode) => void;
   bundle: ReportBundle;
 }
 
-/** Title, the Firm A / Firm B switch, and the run summary chips. */
-export function Header({ firm, onFirm, bundle }: Props) {
+/** Title, the Firm A / Firm B switch, the rule-extractor switch, and the run summary chips. */
+export function Header({ firm, onFirm, extractor, onExtractor, bundle }: Props) {
   const rec = bundle.reconciliation;
   const trace = bundle.traceability;
   const fw = bundle.firewall.check;
@@ -25,6 +27,28 @@ export function Header({ firm, onFirm, bundle }: Props) {
           </button>
           <button className={firm === "firm_B" ? "active" : ""} onClick={() => onFirm("firm_B")}>
             Firm B
+          </button>
+        </div>
+
+        <div
+          className="firm-toggle extractor-toggle"
+          role="tablist"
+          aria-label="Select rule extractor"
+        >
+          <span className="toggle-label">Rule extractor</span>
+          <button
+            className={extractor === "seed" ? "active" : ""}
+            onClick={() => onExtractor("seed")}
+            title="Deterministic, hardcoded rule set"
+          >
+            Hardcoded
+          </button>
+          <button
+            className={extractor === "llm" ? "active" : ""}
+            onClick={() => onExtractor("llm")}
+            title="LLM interprets the guideline text (falls back to hardcoded if no API key)"
+          >
+            LLM
           </button>
         </div>
 

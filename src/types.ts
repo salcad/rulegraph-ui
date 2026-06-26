@@ -87,6 +87,18 @@ export interface AuditEvent {
   data: Record<string, unknown>;
 }
 
+// The verbatim prompt sent to the LLM rule extractor and the reply it returned. Present only for an
+// LLM run. When `fell_back` is true the seed extractor produced the rules instead (no API key, an
+// error, or an empty result) and `note` explains why; `reply` may then be empty.
+export interface LlmExchange {
+  model: string;
+  system_prompt: string;
+  user_prompt: string;
+  reply: string;
+  fell_back: boolean;
+  note: string | null;
+}
+
 export interface ReportBundle {
   firm: FirmConfig;
   figures: Figure[];
@@ -94,9 +106,14 @@ export interface ReportBundle {
   traceability: TraceabilityReport;
   firewall: Firewall;
   audit: AuditEvent[];
+  llm_exchange?: LlmExchange | null;
 }
 
 export type FirmId = "firm_A" | "firm_B";
+
+// Which rule extractor the engine should use for a run: the deterministic hardcoded baseline, or the
+// LLM-backed extractor that interprets the guideline text.
+export type ExtractorMode = "seed" | "llm";
 
 // Firm-method mini-DSL live preview (the "Method DSL" tab).
 export interface DslError {
