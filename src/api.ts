@@ -1,4 +1,4 @@
-import type { FirmId, GraphView, ReportBundle } from "./types";
+import type { FirmId, FirmMethodPreview, GraphView, ReportBundle } from "./types";
 
 // Base URL for the engine's web API. Empty by default, so the front end calls the same origin and a
 // proxy (the Vite dev server, the nginx container, or a Vercel rewrite) forwards /api to the backend.
@@ -27,6 +27,19 @@ export async function loadReport(firm: FirmId): Promise<ReportBundle> {
   return (await res.json()) as ReportBundle;
 }
 
+/** Lists the firms available for the switcher (bundled + any saved from the method DSL). */
+export async function loadFirms(): Promise<FirmId[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/firms`);
+    if (res.ok) {
+      return (await res.json()) as FirmId[];
+    }
+  } catch {
+    // Backend not reachable; fall back to the bundled pair.
+  }
+  return ["firm_A", "firm_B"];
+}
+
 /** Loads the knowledge graph for the Graph tab. */
 export async function loadGraph(): Promise<GraphView> {
   const res = await fetch(`${API_BASE}/api/graph`);
@@ -43,6 +56,46 @@ export async function loadFigureGraph(figure: string): Promise<GraphView> {
     throw new Error(`Could not load the trace graph for ${figure} (${res.status})`);
   }
   return (await res.json()) as GraphView;
+}
+
+/**
+ * Compiles a firm-method DSL draft and returns the live preview: the resolved config, validation
+ * errors, a plain-English explanation, and (best-effort) the figures those conventions produce.
+ * Requires the live backend — the static-bundle fallback cannot recompute figures.
+ */
+export async function previewFirmMethod(dsl: string): Promise<FirmMethodPreview> {
+  const res = await fetch(`${API_BASE}/api/firm-method/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dsl, run: true }),
+  });
+  if (!res.ok) {
+    throw new Error(`Preview failed (${res.status})`);
+  }
+  return (await res.json()) as FirmMethodPreview;
+}
+
+/** Loads the canonical DSL for a known firm, to seed the editor from a real template. */
+export async function loadFirmMethodDsl(firm: FirmId): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/firm-method/dsl?firm=${firm}`);
+  if (!res.ok) {
+    throw new Error(`Could not load the DSL template for ${firm} (${res.status})`);
+  }
+  return ((await res.json()) as { dsl: string }).dsl;
+}
+
+/** Persists a valid method DSL as a firm config; returns the saved id and refreshed firm list. */
+export async function saveFirmMethod(dsl: string): Promise<{ firm_id: string; firms: FirmId[] }> {
+  const res = await fetch(`${API_BASE}/api/firm-method/save`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dsl, run: false }),
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error((body as { error?: string }).error ?? `Save failed (${res.status})`);
+  }
+  return body as { firm_id: string; firms: FirmId[] };
 }
 
 /** Turns a figure code such as aggregate_non_ig_exposure into a readable label. */

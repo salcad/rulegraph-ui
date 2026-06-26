@@ -1,13 +1,15 @@
 import type { FirmId, ReportBundle } from "../types";
+import { readable } from "../api";
 
 interface Props {
   firm: FirmId;
+  firms: FirmId[];
   onFirm: (f: FirmId) => void;
   bundle: ReportBundle;
 }
 
-/** Title, the Firm A / Firm B switch, and the run summary chips. */
-export function Header({ firm, onFirm, bundle }: Props) {
+/** Title, the firm switch (bundled + saved firms), and the run summary chips. */
+export function Header({ firm, firms, onFirm, bundle }: Props) {
   const rec = bundle.reconciliation;
   const trace = bundle.traceability;
   const fw = bundle.firewall.check;
@@ -20,12 +22,11 @@ export function Header({ firm, onFirm, bundle }: Props) {
 
       <div className="header-row">
         <div className="firm-toggle" role="tablist" aria-label="Select firm">
-          <button className={firm === "firm_A" ? "active" : ""} onClick={() => onFirm("firm_A")}>
-            Firm A
-          </button>
-          <button className={firm === "firm_B" ? "active" : ""} onClick={() => onFirm("firm_B")}>
-            Firm B
-          </button>
+          {firms.map((f) => (
+            <button key={f} className={firm === f ? "active" : ""} onClick={() => onFirm(f)}>
+              {readable(f)}
+            </button>
+          ))}
         </div>
 
         <div className="summary">

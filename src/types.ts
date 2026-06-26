@@ -87,7 +87,23 @@ export interface ReportBundle {
   audit: AuditEvent[];
 }
 
-export type FirmId = "firm_A" | "firm_B";
+// A firm id. Open-ended: besides the bundled firm_A / firm_B, firms can be saved from the method DSL.
+export type FirmId = string;
+
+// Firm-method mini-DSL live preview (the "Method DSL" tab).
+export interface DslError {
+  line: number;
+  message: string;
+}
+
+export interface FirmMethodPreview {
+  config: FirmConfig;
+  valid: boolean;
+  errors: DslError[];
+  explanation: string[];
+  figures: Figure[] | null;
+  figures_note: string | null;
+}
 
 export interface GraphNode {
   id: string;
