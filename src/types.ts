@@ -97,6 +97,9 @@ export interface LlmExchange {
   reply: string;
   fell_back: boolean;
   note: string | null;
+  // The raw seed_rules.json actually used, present only on a fallback run so the viewer can show the
+  // cached rule set; absent on a successful LLM run.
+  seed_rules?: string | null;
 }
 
 export interface ReportBundle {
@@ -106,6 +109,9 @@ export interface ReportBundle {
   traceability: TraceabilityReport;
   firewall: Firewall;
   audit: AuditEvent[];
+  // Configured LLM model id (e.g. "anthropic/claude-sonnet-4.6"), always present so the viewer can
+  // label the LLM extractor with the model it would use, even before any LLM run.
+  llm_model: string;
   llm_exchange?: LlmExchange | null;
 }
 

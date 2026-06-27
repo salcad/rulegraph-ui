@@ -40,6 +40,10 @@ body {
   color: var(--muted); background: var(--panel); border-right: 1px solid var(--line);
   white-space: nowrap;
 }
+.extractor-toggle .extractor-value {
+  display: inline-flex; align-items: center; padding: 8px 16px; font-size: 13px;
+  background: var(--accent); color: #fff; white-space: nowrap;
+}
 
 .summary { display: flex; gap: 10px; flex-wrap: wrap; }
 .chip {
@@ -126,6 +130,17 @@ tbody tr.selected { background: #eef4fb; }
   padding: 20px 24px; margin: 64px auto; max-width: 460px;
   box-shadow: 0 10px 30px rgba(28, 37, 48, 0.08);
 }
+/* Landing screen: a vertical variant of the loading card with the firm switch and the run button. */
+.start-card {
+  flex-direction: column; align-items: stretch; gap: 18px; max-width: 520px; text-align: left;
+}
+.start-card .firm-toggle { align-self: flex-start; }
+.run-extractor {
+  border: 0; border-radius: 8px; background: var(--accent); color: #fff;
+  padding: 12px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.run-extractor:hover { filter: brightness(0.95); }
+
 .loading-text { display: flex; flex-direction: column; gap: 3px; }
 .loading-text strong { font-size: 15px; }
 .loading-text span { color: var(--muted); font-size: 13px; }
@@ -266,6 +281,7 @@ tbody tr.selected { background: #eef4fb; }
   padding: 10px 12px; border-radius: 6px; font-size: 13px;
   background: #fef3c7; border: 1px solid #fcd34d; color: #92400e;
 }
+.llm-fallback-explain { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 /* Constrain the PDF to the dialog instead of the full 80vh used on the Source tab. */
 .modal-pdf .pdf-frame { height: 72vh; min-height: 0; }
 
