@@ -1,11 +1,12 @@
 import type { ExtractorMode, FirmId, FirmMethodPreview, GraphView, ReportBundle } from "./types";
 
-// Base URL for the engine's web API. The front end calls the backend directly (cross-origin), and the
-// backend allows the viewer's origin via CORS (see RULEGRAPH_CORS_ORIGINS / WebConfig). There is no
-// proxy in front of /rulegraph-api. Defaults to the engine's local dev address; set VITE_API_BASE_URL to the
-// backend's public URL for any deployed build (the value is baked in at build time by Vite).
+// Base URL for the engine's web API. The front end calls /rulegraph-api/* as SAME-ORIGIN relative
+// paths; an nginx in front routes /rulegraph-api/ to the engine (see nginx.conf / README), so there
+// is no CORS and no build-time URL baking. Defaults to "" (same origin). VITE_API_BASE_URL can still
+// be set to call a different origin directly (e.g. local dev against a remote backend), in which case
+// the backend must allow that origin via CORS (RULEGRAPH_CORS_ORIGINS / WebConfig).
 const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "http://localhost:8074";
+  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
 /**
  * The result of loading a report: the bundle plus its source. {@code source} is {@code "live"} when

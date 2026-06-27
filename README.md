@@ -18,8 +18,8 @@ npm install
 npm run dev
 ```
 
-Then open the printed local URL (http://localhost:5173 by default). The viewer calls the engine's
-web API directly from the browser, so for a live run the backend needs to be up on port 8074. Start
+Then open the printed local URL (http://localhost:5173 by default). The dev server proxies
+`/rulegraph-api` to the engine, so for a live run the backend needs to be up on port 8074. Start
 it from the engine project (`cd ../rulegraph-engine && docker compose up -d --build`); see that
 project's README for the details. If the backend is unreachable the viewer falls back to the static
 report bundles shipped under `public/data/`, so the UI still renders something to look at.
@@ -77,11 +77,11 @@ The report is organised into tabs:
 
 ## Where the data comes from
 
-For a live run the viewer talks to the engine's web API directly, cross-origin, and the backend
-allows the viewer's origin via CORS. Each report tab is driven by one `/rulegraph-api/report` call;
-the graph views call `/rulegraph-api/graph` and `/rulegraph-api/figure-graph`; the method studio
-calls `/rulegraph-api/firm-method`. The engine is the single source of truth, and the front end only
-presents what the engine produced.
+For a live run the viewer calls the engine's web API at `/rulegraph-api/*` as same-origin relative
+paths; an nginx in front proxies that prefix to the engine, so there is no CORS. Each report tab is
+driven by one `/rulegraph-api/report` call; the graph views call `/rulegraph-api/graph` and
+`/rulegraph-api/figure-graph`; the method studio calls `/rulegraph-api/firm-method`. The engine is
+the single source of truth, and the front end only presents what the engine produced.
 
 If the backend cannot be reached, the loader falls back to the static report bundles the engine
 exported, served from `public/data/report-<firm>.json`. To refresh those after a new run:
@@ -94,17 +94,27 @@ cp ../rulegraph-engine/artifacts/exports/report-firm_B.json public/data/
 
 ## Backend API URL
 
-The API base URL is read from the `VITE_API_BASE_URL` environment variable at build time (Vite bakes
-it into the bundle) and defaults to `http://localhost:8074` for local development. Set it for any
-deployed build:
+The viewer calls `/rulegraph-api/*` as **same-origin** relative paths, so there is nothing to bake
+into the build and no CORS to configure. A host nginx serves the UI and forwards `/rulegraph-api/` to
+the engine.
+
+**Production (VPS).** This module ships its own `docker-compose.yml`: it builds the viewer and serves
+it on `127.0.0.1:8073` with `VITE_API_BASE_URL` empty (same-origin). Deploy it alongside the backend
+module (`../rulegraph-engine/docker-compose.yml`); the host nginx vhost routes `/` here and
+`/rulegraph-api/` to the backend. The complete walkthrough — both stacks, the nginx vhost, and TLS via
+certbot — lives in [../rulegraph-engine/deploy/README.md](../rulegraph-engine/deploy/README.md).
 
 ```bash
-VITE_API_BASE_URL=https://api.example.com npm run build
+docker compose up -d --build
 ```
 
-The backend must allow this site's origin for CORS. Set `RULEGRAPH_CORS_ORIGINS` on the engine (see
-the engine README). When the viewer is served over HTTPS the backend must be HTTPS too, otherwise the
-browser blocks the call as mixed content.
+**Local dev.** `npm run dev` proxies `/rulegraph-api` to `http://localhost:8074` (see
+`vite.config.ts`); override the target with `VITE_API_PROXY_TARGET`.
+
+**Optional direct cross-origin.** To have the browser call a different origin instead of going through
+the proxy, set `VITE_API_BASE_URL` at build time (`npm run build`). The backend must then allow this
+site's origin via `RULEGRAPH_CORS_ORIGINS` (see the engine README), and an HTTPS page requires an
+HTTPS backend or the browser blocks the call as mixed content.
 
 ## Tech
 

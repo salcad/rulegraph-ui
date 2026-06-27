@@ -1,27 +1,23 @@
-# Front-end stack for a Docker VPS. Builds the static viewer and serves it with nginx. The browser
-# calls the engine's API directly (cross-origin); the backend allows this site's origin through CORS
-# (set RULEGRAPH_CORS_ORIGINS on the engine). The backend runs separately from
-# rulegraph-engine/docker-compose.yml.
+# Front-end module: builds the static viewer and serves it with nginx. Deploy this alongside the
+# backend module (../rulegraph-engine/docker-compose.yml); the two run as independent stacks behind
+# the host's nginx vhost, which is the single public entry point.
 #
-#   # 1. bring up the backend first (from ../rulegraph-engine), with this UI's origin in
-#   #    RULEGRAPH_CORS_ORIGINS, e.g. http://<vps-ip> or https://your-domain:
-#   docker compose -f ../rulegraph-engine/docker-compose.yml up -d --build
+#   docker compose up -d --build      # build and start the UI
+#   docker compose down               # stop
 #
-#   # 2. then the UI, pointing it at the backend's public URL (baked into the build):
-#   VITE_API_BASE_URL=http://<vps-ip>:8074 docker compose up -d --build
-#
-# The UI is then on http://<vps-ip>/  (port 80). Put TLS/a domain in front with a reverse proxy
-# (Caddy, Traefik, or certbot+nginx) when you're ready — the browser origin should be HTTPS, and the
-# backend should then be HTTPS too (the API base must not be plain HTTP from an HTTPS page).
+# The browser calls /rulegraph-api/* as SAME-ORIGIN relative paths (VITE_API_BASE_URL stays ""), and
+# the host nginx routes /rulegraph-api/ to the backend and everything else here. No CORS, no API URL
+# baked into the build. See ../rulegraph-engine/deploy/README.md for the vhost and TLS.
 services:
   ui:
     build:
       context: .
       args:
-        # Public URL of the engine's API that the browser will call. Defaults to the engine's local
-        # dev address when unset; set it to the backend's reachable URL for a real deployment.
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8074}
+        # Empty base URL => the bundle calls /rulegraph-api/ on the current origin (proxied to the
+        # backend by the host nginx). Same-origin, no CORS.
+        VITE_API_BASE_URL: ""
     container_name: rulegraph-ui
-    restart: unless-stopped
+    # Loopback only: reached via the host nginx `location /` proxy, never directly from the internet.
     ports:
-      - "80:80"
+      - "127.0.0.1:8073:80"
+    restart: unless-stopped
