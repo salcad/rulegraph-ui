@@ -32,7 +32,7 @@ export function LlmExchangeModal({ exchange, onClose }: Props) {
           {enginePreparedPrompt && (
             <p className="llm-fallback-explain">
               The demo still runs and every figure is valid. The rules came from the bundled{" "}
-              <span className="mono">seed_rules.json</span> &mdash; the approved rule set, in the
+              <span className="mono">seed_rules.json</span> the approved rule set, in the
               exact JSON shape the LLM returns. Treat it as a cached extraction: the engine still
               computes and traces each figure from these rules, it just skipped the live model call.
               Set a valid <span className="mono">OPENROUTER_API_KEY</span> to run the LLM live instead.
@@ -41,7 +41,7 @@ export function LlmExchangeModal({ exchange, onClose }: Props) {
 
           {exchange.seed_rules && (
             <section>
-              <h4>Cached rule set &mdash; seed_rules.json</h4>
+              <h4>Cached seed_rules.json</h4>
               <pre className="llm-block">{exchange.seed_rules}</pre>
             </section>
           )}

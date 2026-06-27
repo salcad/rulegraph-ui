@@ -1,9 +1,11 @@
 import type { ExtractorMode, FirmId, FirmMethodPreview, GraphView, ReportBundle } from "./types";
 
-// Base URL for the engine's web API. Empty by default, so the front end calls the same origin and a
-// proxy (the Vite dev server, the nginx container, or a Vercel rewrite) forwards /api to the backend.
-// Set VITE_API_BASE_URL to the backend's public URL to call it directly instead.
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+// Base URL for the engine's web API. The front end calls the backend directly (cross-origin), and the
+// backend allows the viewer's origin via CORS (see RULEGRAPH_CORS_ORIGINS / WebConfig). There is no
+// proxy in front of /rulegraph-api. Defaults to the engine's local dev address; set VITE_API_BASE_URL to the
+// backend's public URL for any deployed build (the value is baked in at build time by Vite).
+const API_BASE =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "http://localhost:8074";
 
 /**
  * The result of loading a report: the bundle plus its source. {@code source} is {@code "live"} when
@@ -32,7 +34,7 @@ export async function loadReport(firm: FirmId, extractor?: ExtractorMode): Promi
     if (extractor) {
       params.set("extractor", extractor);
     }
-    const live = await fetch(`${API_BASE}/api/report?${params.toString()}`);
+    const live = await fetch(`${API_BASE}/rulegraph-api/report?${params.toString()}`);
     if (live.ok) {
       return { bundle: (await live.json()) as ReportBundle, source: "live" };
     }
@@ -49,7 +51,7 @@ export async function loadReport(firm: FirmId, extractor?: ExtractorMode): Promi
 
 /** Loads the knowledge graph for the Graph tab. */
 export async function loadGraph(): Promise<GraphView> {
-  const res = await fetch(`${API_BASE}/api/graph`);
+  const res = await fetch(`${API_BASE}/rulegraph-api/graph`);
   if (!res.ok) {
     throw new Error(`Could not load the graph (${res.status})`);
   }
@@ -58,7 +60,7 @@ export async function loadGraph(): Promise<GraphView> {
 
 /** Loads the trace subgraph for one figure (the live result of the traversal it was computed along). */
 export async function loadFigureGraph(figure: string): Promise<GraphView> {
-  const res = await fetch(`${API_BASE}/api/figure-graph?figure=${encodeURIComponent(figure)}`);
+  const res = await fetch(`${API_BASE}/rulegraph-api/figure-graph?figure=${encodeURIComponent(figure)}`);
   if (!res.ok) {
     throw new Error(`Could not load the trace graph for ${figure} (${res.status})`);
   }
@@ -71,7 +73,7 @@ export async function loadFigureGraph(figure: string): Promise<GraphView> {
  * Requires the live backend. The static-bundle fallback cannot recompute figures.
  */
 export async function previewFirmMethod(dsl: string): Promise<FirmMethodPreview> {
-  const res = await fetch(`${API_BASE}/api/firm-method/preview`, {
+  const res = await fetch(`${API_BASE}/rulegraph-api/firm-method/preview`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ dsl, run: true }),
@@ -84,7 +86,7 @@ export async function previewFirmMethod(dsl: string): Promise<FirmMethodPreview>
 
 /** Loads the canonical DSL for a known firm, to seed the editor from a real template. */
 export async function loadFirmMethodDsl(firm: FirmId): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/firm-method/dsl?firm=${firm}`);
+  const res = await fetch(`${API_BASE}/rulegraph-api/firm-method/dsl?firm=${firm}`);
   if (!res.ok) {
     throw new Error(`Could not load the DSL template for ${firm} (${res.status})`);
   }

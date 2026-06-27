@@ -43,12 +43,28 @@ npm install
 npm run dev
 ```
 
-Then open the printed local URL (by default http://localhost:5173). To produce a production build:
+Then open the printed local URL (by default http://localhost:5173). The viewer calls the engine's web
+API directly in the browser (no proxy); the backend allows this origin via CORS. To produce a
+production build:
 
 ```bash
 npm run build
 npm run preview
 ```
+
+## Backend API URL
+
+The viewer talks to the engine's web API directly, cross-origin. The API base URL is read from the
+`VITE_API_BASE_URL` environment variable at build time (Vite bakes it into the bundle) and defaults to
+`http://localhost:8074` for local development. Set it for any deployed build:
+
+```bash
+VITE_API_BASE_URL=https://api.example.com npm run build
+```
+
+The backend must allow this site's origin for CORS — set `RULEGRAPH_CORS_ORIGINS` on the engine (see
+the engine README). If the backend is unreachable, the loader falls back to the static bundles under
+`public/data/`.
 
 ## Structure
 
