@@ -13,6 +13,10 @@ import { HowGraphBuiltView } from "./components/HowGraphBuiltView";
 import { SourcePdfView } from "./components/SourcePdfView";
 import { MethodStudio } from "./components/MethodStudio";
 import { Glossary } from "./components/Glossary";
+import { WalkthroughModal } from "./components/WalkthroughModal";
+
+// localStorage key recording that the viewer dismissed the walkthrough with "Don't show again".
+const WALKTHROUGH_DISMISSED = "rulegraph.walkthroughDismissed";
 
 type Tab =
   | "figures"
@@ -85,6 +89,16 @@ export function App() {
   // The LLM prompt/reply popup, shown after an LLM run loads so the operator sees exactly what was
   // asked and answered before reading the figures.
   const [llmExchange, setLlmExchange] = useState<LlmExchange | null>(null);
+  // The quick walkthrough opens on first load unless the viewer has dismissed it with "Don't show
+  // again"; the Header keeps a button to reopen it on demand.
+  const [showWalkthrough, setShowWalkthrough] = useState(
+    () => localStorage.getItem(WALKTHROUGH_DISMISSED) !== "true",
+  );
+
+  const closeWalkthrough = (dontShowAgain: boolean) => {
+    if (dontShowAgain) localStorage.setItem(WALKTHROUGH_DISMISSED, "true");
+    setShowWalkthrough(false);
+  };
 
   useEffect(() => {
     // Until the operator picks an extractor, sit on the landing screen and fetch nothing.
@@ -163,6 +177,7 @@ export function App() {
             Run rule extractor via LLM ({LLM_MODEL_HINT})
           </button>
         </div>
+        {showWalkthrough && <WalkthroughModal onClose={closeWalkthrough} />}
       </div>
     );
   }
@@ -184,7 +199,12 @@ export function App() {
 
   return (
     <div className="app">
-      <Header firm={firm} onFirm={setFirm} bundle={bundle} />
+      <Header
+        firm={firm}
+        onFirm={setFirm}
+        bundle={bundle}
+        onShowWalkthrough={() => setShowWalkthrough(true)}
+      />
 
       <nav className="tabs">
         {TABS.map((t) => (
@@ -226,6 +246,8 @@ export function App() {
       {llmExchange && (
         <LlmExchangeModal exchange={llmExchange} onClose={() => setLlmExchange(null)} />
       )}
+
+      {showWalkthrough && <WalkthroughModal onClose={closeWalkthrough} />}
     </div>
   );
 }

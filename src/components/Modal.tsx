@@ -4,10 +4,12 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  /** Extra class on the dialog box, e.g. to constrain its width for text-only content. */
+  className?: string;
 }
 
 /** A centered overlay dialog. Closes on Escape, on the close button, or on a backdrop click. */
-export function Modal({ title, onClose, children }: ModalProps) {
+export function Modal({ title, onClose, children, className }: ModalProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -23,7 +25,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal"
+        className={className ? `modal ${className}` : "modal"}
         role="dialog"
         aria-modal="true"
         aria-label={title}

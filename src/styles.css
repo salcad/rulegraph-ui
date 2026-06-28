@@ -25,7 +25,7 @@ body {
 .app { max-width: 1100px; margin: 0 auto; padding: 24px; }
 
 /* Header */
-.header { margin-bottom: 20px; }
+.header { margin-bottom: 20px; position: relative; }
 .header h1 { margin: 0 0 2px; font-size: 22px; }
 .header .sub { color: var(--muted); margin-bottom: 14px; }
 .header-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
@@ -314,6 +314,36 @@ tbody tr.selected { background: #eef4fb; }
 }
 .modal-close:hover { color: var(--ink); }
 .modal-body { padding: 16px 18px; overflow: auto; }
+
+/* Narrower, shorter dialog for text-only content like the walkthrough. The reduced height also lets
+   the intro auto-scroll have room to actually move on taller screens. */
+.modal-narrow { width: min(560px, 100%); max-height: min(78vh, 620px); }
+
+/* Quick walkthrough shown on first load. */
+.walkthrough { display: flex; flex-direction: column; gap: 20px; }
+.walkthrough-intro { display: flex; flex-direction: column; gap: 10px; }
+.walkthrough-intro p { margin: 0; font-size: 14px; line-height: 1.6; }
+.walkthrough-sections { display: flex; flex-direction: column; gap: 16px; }
+.walkthrough-sections section { display: flex; flex-direction: column; gap: 4px; }
+.walkthrough-sections strong { font-size: 14px; }
+.walkthrough-sections p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.walkthrough-closing {
+  margin: 0; font-size: 14px; line-height: 1.6; font-style: italic;
+  border-left: 3px solid var(--accent); padding-left: 12px;
+}
+.walkthrough-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  border-top: 1px solid var(--line); padding-top: 16px;
+}
+.walkthrough-dontshow {
+  display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px;
+  cursor: pointer;
+}
+.walkthrough-btn {
+  position: absolute; top: 0; right: 0; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel); color: var(--muted); font-size: 13px; padding: 6px 12px; cursor: pointer;
+}
+.walkthrough-btn:hover { color: var(--ink); border-color: var(--muted); }
 
 /* LLM prompt/reply popup, shown when the operator picks the LLM extractor. */
 .llm-exchange { display: flex; flex-direction: column; gap: 14px; }

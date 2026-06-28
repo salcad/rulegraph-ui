@@ -4,6 +4,7 @@ interface Props {
   firm: FirmId;
   onFirm: (f: FirmId) => void;
   bundle: ReportBundle;
+  onShowWalkthrough: () => void;
 }
 
 /**
@@ -19,7 +20,7 @@ function prettyModel(model: string | undefined): string | null {
 }
 
 /** Title, the Firm A / Firm B switch, the rule-extractor indicator, and the run summary chips. */
-export function Header({ firm, onFirm, bundle }: Props) {
+export function Header({ firm, onFirm, bundle, onShowWalkthrough }: Props) {
   const rec = bundle.reconciliation;
   const trace = bundle.traceability;
   const fw = bundle.firewall.check;
@@ -28,6 +29,13 @@ export function Header({ firm, onFirm, bundle }: Props) {
   const model = prettyModel(bundle.llm_model);
   return (
     <header className="header">
+      <button
+        className="walkthrough-btn"
+        onClick={onShowWalkthrough}
+        title="Show the quick walkthrough"
+      >
+        ? Walkthrough
+      </button>
       <h1>RuleGraph Report Viewer</h1>
       <div className="sub">
         Audit-grade portfolio compliance figures, traced through the knowledge graph.
