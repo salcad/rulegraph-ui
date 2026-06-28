@@ -8,6 +8,8 @@ import { ReconciliationView } from "./components/ReconciliationView";
 import { TraceabilityView } from "./components/TraceabilityView";
 import { FirewallView } from "./components/FirewallView";
 import { AuditView } from "./components/AuditView";
+import { RuleExtractorView } from "./components/RuleExtractorView";
+import { HowGraphBuiltView } from "./components/HowGraphBuiltView";
 import { SourcePdfView } from "./components/SourcePdfView";
 import { MethodStudio } from "./components/MethodStudio";
 import { Glossary } from "./components/Glossary";
@@ -18,6 +20,8 @@ type Tab =
   | "traceability"
   | "firewall"
   | "audit"
+  | "extractor"
+  | "build"
   | "source"
   | "method"
   | "glossary";
@@ -33,6 +37,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "traceability", label: "Traceability" },
   { id: "firewall", label: "Firewall" },
   { id: "audit", label: "Audit log" },
+  { id: "extractor", label: "Rule extractor" },
+  { id: "build", label: "How it's built" },
   { id: "source", label: "Source PDF" },
   { id: "method", label: "Method DSL" },
   { id: "glossary", label: "Glossary" },
@@ -197,6 +203,10 @@ export function App() {
       {tab === "traceability" && <TraceabilityView report={bundle.traceability} graph={graph} />}
       {tab === "firewall" && <FirewallView firewall={bundle.firewall} />}
       {tab === "audit" && <AuditView events={bundle.audit} />}
+      {tab === "extractor" && (
+        <RuleExtractorView exchange={bundle.llm_exchange} model={bundle.llm_model} />
+      )}
+      {tab === "build" && <HowGraphBuiltView />}
       {tab === "source" && <SourcePdfView />}
       {tab === "method" && <MethodStudio />}
       {tab === "glossary" && <Glossary />}

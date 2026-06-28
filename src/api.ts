@@ -94,6 +94,15 @@ export async function loadFirmMethodDsl(firm: FirmId): Promise<string> {
   return ((await res.json()) as { dsl: string }).dsl;
 }
 
+/**
+ * URL for a raw source file streamed by the engine ({@code holdings} = sample_holdings.csv,
+ * {@code formulas} = formulas.yaml). The viewer shows these unmodified next to a figure; streaming
+ * them from the engine means there is no second copy to drift from the files the pipeline reads.
+ */
+export function sourceFileUrl(name: "holdings" | "formulas"): string {
+  return `${API_BASE}/rulegraph-api/source/${name}`;
+}
+
 /** Turns a figure code such as aggregate_non_ig_exposure into a readable label. */
 export function readable(code: string): string {
   return code

@@ -1,6 +1,13 @@
+import { useState } from "react";
 import type { Figure, FigureInput } from "../types";
-import { readable } from "../api";
+import { readable, sourceFileUrl } from "../api";
 import { StatusBadge } from "./StatusBadge";
+import { Modal } from "./Modal";
+import { SourceFileView } from "./SourceFileView";
+
+// The Formula box links to the raw source files the engine streams, so a figure's number can be
+// traced to the holdings it sums and the arithmetic that combined them, without leaving the report.
+type SourceModal = "holdings" | "formulas" | null;
 
 interface FigureDetailProps {
   figure: Figure | null;
@@ -24,6 +31,9 @@ function substitute(formula: string, inputs: FigureInput[]): string {
 
 /** Drill-down for one figure: its value, then the graph path and source it traces to. */
 export function FigureDetail({ figure, onShowGraph, onShowPdf }: FigureDetailProps) {
+  // Which raw source file (if any) is open in the popup. Reset whenever the selected figure changes.
+  const [sourceModal, setSourceModal] = useState<SourceModal>(null);
+
   if (!figure) {
     return (
       <div className="detail">
@@ -74,6 +84,22 @@ export function FigureDetail({ figure, onShowGraph, onShowPdf }: FigureDetailPro
                 Evaluated by the formula-registry DSL (config, not the language model). The graph
                 traversal selects the inputs above; this expression computes the value.
               </div>
+              <div className="source-links">
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => setSourceModal("holdings")}
+                >
+                  View holdings data (sample_holdings.csv)
+                </button>
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => setSourceModal("formulas")}
+                >
+                  View formula registry (formulas.yaml)
+                </button>
+              </div>
             </div>
           ) : (
             "(none)"
@@ -107,6 +133,17 @@ export function FigureDetail({ figure, onShowGraph, onShowPdf }: FigureDetailPro
           )}
         </dd>
       </dl>
+
+      {sourceModal === "holdings" && (
+        <Modal title="Holdings data: sample_holdings.csv" onClose={() => setSourceModal(null)}>
+          <SourceFileView url={sourceFileUrl("holdings")} kind="csv" highlight={readable(figure.figure)} />
+        </Modal>
+      )}
+      {sourceModal === "formulas" && (
+        <Modal title="Formula registry: formulas.yaml" onClose={() => setSourceModal(null)}>
+          <SourceFileView url={sourceFileUrl("formulas")} kind="yaml" highlight={figure.formula} />
+        </Modal>
+      )}
     </div>
   );
 }

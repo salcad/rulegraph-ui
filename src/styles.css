@@ -106,6 +106,17 @@ tbody tr.selected { background: #eef4fb; }
 .formula .inputs code { padding: 1px 4px; background: #eef2f7; border: 1px solid var(--line); border-radius: 3px; }
 .formula .inputs .src { display: inline; margin: 0; }
 .formula .query { margin: 4px 0 8px; padding: 6px 8px; background: #0f172a; color: #e2e8f0; border-radius: 4px; font-size: 11px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+.formula .source-links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; }
+
+/* Raw source-file popups (sample_holdings.csv, formulas.yaml) */
+.source-file { max-height: 65vh; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.source-csv { width: 100%; border-collapse: collapse; font-size: 12px; }
+.source-csv th, .source-csv td { padding: 5px 8px; border-bottom: 1px solid #f0f3f7; text-align: left; white-space: nowrap; }
+.source-csv th { position: sticky; top: 0; background: #f4f7fb; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+.source-csv td.num, .source-csv th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.source-csv tr.row-hit td { background: #fff7d6; font-weight: 600; }
+.source-yaml { margin: 0; padding: 10px 12px; font-size: 12px; line-height: 1.5; white-space: pre; }
+.source-yaml .line-hit { background: #fff7d6; font-weight: 600; }
 
 /* Glossary tab */
 .glossary-view { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; }
@@ -121,6 +132,22 @@ tbody tr.selected { background: #eef4fb; }
 .glossary-row dd { margin: 0; color: var(--ink); font-size: 13px; line-height: 1.5; }
 @media (max-width: 640px) { .glossary-row { grid-template-columns: 1fr; gap: 2px; } }
 .hint { color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
+
+/* "How it's built" tab */
+.how-view { display: flex; flex-direction: column; gap: 14px; }
+.how-section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 20px; }
+.how-section h3 { margin: 0 0 10px; color: var(--accent); font-size: 15px; }
+.how-section h4 { margin: 16px 0 6px; font-size: 13px; color: var(--ink); }
+.how-note { color: var(--ink); font-size: 13px; line-height: 1.6; margin: 0 0 8px; max-width: 80ch; }
+.how-list { margin: 0; padding-left: 20px; }
+.how-list li { font-size: 13px; line-height: 1.6; margin: 6px 0; max-width: 80ch; }
+.how-sublist { margin: 8px 0 4px; padding-left: 18px; list-style: disc; }
+.how-sublist li { font-size: 13px; line-height: 1.6; margin: 6px 0; max-width: 78ch; }
+.how-flow { margin: 0 0 12px; padding: 12px 14px; background: #f4f7fb; border: 1px solid var(--line); border-radius: 6px; font-size: 11px; line-height: 1.5; overflow-x: auto; white-space: pre; }
+.how-code { margin: 0 0 8px; padding: 10px 12px; background: #0f172a; color: #e2e8f0; border-radius: 6px; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; }
+.how-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+.how-table th, .how-table td { padding: 7px 10px; border-bottom: 1px solid #f0f3f7; text-align: left; vertical-align: top; }
+.how-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
 
 /* Loading state: a centered card on first load, and a translucent overlay during a reload so the
    previous report stays readable underneath instead of the page blanking to white. */
@@ -202,6 +229,28 @@ tbody tr.selected { background: #eef4fb; }
   100% { opacity: 0.6; transform: scale(1); }
 }
 
+/* Properties panel shown when a graph node is clicked. Overlaid on the canvas, top-left. */
+.node-props {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  width: 240px; max-height: calc(100% - 20px); overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); cursor: default;
+}
+.node-props-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.node-props-type { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.node-props-type i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.node-props-close {
+  border: none; background: none; color: var(--muted); cursor: pointer;
+  font-size: 18px; line-height: 1; padding: 0 2px;
+}
+.node-props-close:hover { color: var(--ink); }
+.node-props-label { font-size: 14px; font-weight: 600; color: var(--ink); margin-top: 4px; word-break: break-word; }
+.node-props-id { font-size: 11px; color: var(--muted); margin-top: 2px; word-break: break-all; }
+.node-props-empty { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.node-props-conns { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.node-props-conn { font-size: 12px; color: var(--ink); }
+.node-props-rel { color: var(--accent); font-size: 11px; }
+
 /* Clickable chunk_id in the traceability table */
 .chunk-locate {
   font: inherit; color: var(--accent); background: none; border: none; padding: 0; cursor: pointer;
@@ -282,6 +331,11 @@ tbody tr.selected { background: #eef4fb; }
   background: #fef3c7; border: 1px solid #fcd34d; color: #92400e;
 }
 .llm-fallback-explain { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+/* Rule extractor tab: banner over the exchange panel. On the tab the prompt/reply blocks may run
+   long, so let them grow instead of the dialog's 300px cap. */
+.extractor-view { display: flex; flex-direction: column; gap: 12px; }
+.extractor-view .panel { padding: 16px 18px; }
+.extractor-view .llm-block { max-height: 60vh; }
 /* Constrain the PDF to the dialog instead of the full 80vh used on the Source tab. */
 .modal-pdf .pdf-frame { height: 72vh; min-height: 0; }
 

@@ -200,7 +200,11 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
   const fit = useMemo(() => fitView(graph.nodes, base, height), [graph.nodes, base, height]);
   const [pos, setPos] = useState<Record<string, Pos>>(base);
   const [drag, setDrag] = useState<string | null>(null);
+  // True once a drag actually moved a node, so the trailing click doesn't get treated as a select.
+  const dragMoved = useRef(false);
   const [hover, setHover] = useState<string | null>(null);
+  // The node whose properties panel is open. Clicking a node opens it; clicking it again closes it.
+  const [selected, setSelected] = useState<string | null>(null);
   // The node the user located most recently; it gets a ring so it stands out after the view jumps.
   const [focused, setFocused] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -223,6 +227,26 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     return set;
   }, [hover, graph.edges]);
 
+  const nodeById = useMemo(() => {
+    const m = new Map<string, GraphNode>();
+    for (const n of graph.nodes) m.set(n.id, n);
+    return m;
+  }, [graph.nodes]);
+
+  // Properties + connections of the node whose panel is open, ready for display.
+  const details = useMemo(() => {
+    if (!selected) return null;
+    const node = nodeById.get(selected);
+    if (!node) return null;
+    const outgoing = graph.edges
+      .filter((e) => e.source === selected)
+      .map((e) => ({ rel: e.type, other: nodeById.get(e.target) }));
+    const incoming = graph.edges
+      .filter((e) => e.target === selected)
+      .map((e) => ({ rel: e.type, other: nodeById.get(e.source) }));
+    return { node, outgoing, incoming };
+  }, [selected, nodeById, graph.edges]);
+
   // Screen coords -> viewBox coords (independent of our pan/zoom transform).
   const toSvg = (clientX: number, clientY: number): Pos => {
     const svg = svgRef.current!;
@@ -239,6 +263,7 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
   const onMove = (e: React.MouseEvent) => {
     const svgPt = toSvg(e.clientX, e.clientY);
     if (drag) {
+      dragMoved.current = true;
       setPos((prev) => ({ ...prev, [drag]: toGraph(svgPt) }));
     } else if (panStart.current) {
       const s = panStart.current;
@@ -276,6 +301,7 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     setPan(fit.pan);
     setFocused(null);
     setNotFound(null);
+    setSelected(null);
   };
 
   // When the graph (and thus its layout) changes, snap positions and the camera back to the fresh
@@ -286,6 +312,7 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     setPan(fit.pan);
     setFocused(null);
     setNotFound(null);
+    setSelected(null);
   }, [base, fit]);
 
   // Centre the view on the node a query refers to and ring it. Used by both the search box and the
@@ -368,8 +395,9 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
           style={{ height, cursor: panStart.current ? "grabbing" : "grab" }}
           onWheel={onWheel}
           onMouseDown={(e) => {
-            // Mousedown on empty canvas (not a node) starts a pan.
+            // Mousedown on empty canvas (not a node) starts a pan and closes any open properties panel.
             panStart.current = { svg: toSvg(e.clientX, e.clientY), pan };
+            setSelected(null);
           }}
           onMouseMove={onMove}
           onMouseUp={endDrag}
@@ -405,8 +433,17 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
                 className="graph-node"
                 opacity={active ? 1 : 0.25}
                 onMouseDown={(e) => {
+                  // Don't let the canvas handler start a pan or clear the selection.
                   e.stopPropagation();
+                  dragMoved.current = false;
                   setDrag(node.id);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // A click that didn't drag the node toggles its properties panel.
+                  if (!dragMoved.current) {
+                    setSelected((prev) => (prev === node.id ? null : node.id));
+                  }
                 }}
                 onMouseEnter={() => setHover(node.id)}
                 onMouseLeave={() => setHover(null)}
@@ -414,8 +451,11 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
                 {focused === node.id && (
                   <circle className="graph-node-focus-ring" r={13} fill="none" stroke={colorFor(node.type)} strokeWidth={2} />
                 )}
-                <circle r={hover === node.id || focused === node.id ? 9 : 6} fill={colorFor(node.type)} stroke="#fff" strokeWidth={1.5} />
-                <text x={9} y={4} fontSize={9} fontWeight={focused === node.id ? 700 : 400} fill="#1c2530">
+                {selected === node.id && (
+                  <circle r={11} fill="none" stroke={colorFor(node.type)} strokeWidth={2.5} />
+                )}
+                <circle r={hover === node.id || focused === node.id || selected === node.id ? 9 : 6} fill={colorFor(node.type)} stroke="#fff" strokeWidth={1.5} />
+                <text x={9} y={4} fontSize={9} fontWeight={focused === node.id || selected === node.id ? 700 : 400} fill="#1c2530">
                   {node.label}
                 </text>
               </g>
@@ -423,11 +463,51 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
           })}
           </g>
         </svg>
+
+        {details && (
+          <div className="node-props" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="node-props-head">
+              <span className="node-props-type">
+                <i style={{ background: colorFor(details.node.type) }} />
+                {details.node.type}
+              </span>
+              <button
+                type="button"
+                className="node-props-close"
+                title="Close"
+                onClick={() => setSelected(null)}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="node-props-label">{details.node.label}</div>
+            <div className="node-props-id mono">{details.node.id}</div>
+
+            {details.outgoing.length === 0 && details.incoming.length === 0 ? (
+              <p className="node-props-empty">No connections.</p>
+            ) : (
+              <div className="node-props-conns">
+                {details.outgoing.map((c, i) => (
+                  <div key={`o${i}`} className="node-props-conn">
+                    <span className="node-props-rel">{c.rel} &rarr;</span>{" "}
+                    <span>{c.other ? c.other.label : "(unknown)"}</span>
+                  </div>
+                ))}
+                {details.incoming.map((c, i) => (
+                  <div key={`i${i}`} className="node-props-conn">
+                    <span className="node-props-rel">&larr; {c.rel}</span>{" "}
+                    <span>{c.other ? c.other.label : "(unknown)"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       {showHint && (
         <p className="hint" style={{ textAlign: "left", padding: "10px 2px" }}>
           Scroll to zoom, drag the background to pan, and drag any node to rearrange. Hover a node to
-          highlight what it connects to. This is the same
+          highlight what it connects to, or click it to see its properties. This is the same
           graph the figures are computed over: positions belong to asset classes and issuers, asset
           classes carry their limits, and every rule ends at the guideline chunk that defines it.
         </p>
