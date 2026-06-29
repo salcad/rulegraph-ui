@@ -33,6 +33,15 @@ function substitute(formula: string, inputs: FigureInput[]): string {
 export function FigureDetail({ figure, onShowGraph, onShowPdf }: FigureDetailProps) {
   // Which raw source file (if any) is open in the popup. Reset whenever the selected figure changes.
   const [sourceModal, setSourceModal] = useState<SourceModal>(null);
+  // Brief "Copied" confirmation after copying the runnable Cypher to the clipboard.
+  const [copiedCypher, setCopiedCypher] = useState(false);
+
+  function copyCypher(cypher: string) {
+    void navigator.clipboard.writeText(cypher).then(() => {
+      setCopiedCypher(true);
+      setTimeout(() => setCopiedCypher(false), 1500);
+    });
+  }
 
   if (!figure) {
     return (
@@ -109,9 +118,21 @@ export function FigureDetail({ figure, onShowGraph, onShowPdf }: FigureDetailPro
         <dt>Graph path</dt>
         <dd className="path mono">
           {figure.graph_path ?? "(none)"}
-          <button type="button" className="link-btn" onClick={onShowGraph}>
-            View trace graph
-          </button>
+          <div className="path-actions">
+            <button type="button" className="link-btn" onClick={onShowGraph}>
+              View trace graph
+            </button>
+            {figure.cypher && (
+              <button
+                type="button"
+                className="link-btn"
+                title="Copy the same traversal as runnable Cypher for the Neo4j browser"
+                onClick={() => copyCypher(figure.cypher!)}
+              >
+                {copiedCypher ? "Copied" : "Copy as Cypher"}
+              </button>
+            )}
+          </div>
         </dd>
 
         <dt>Source</dt>

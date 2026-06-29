@@ -95,6 +95,7 @@ tbody tr.selected { background: #eef4fb; }
 .detail dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); margin-top: 12px; }
 .detail dd { margin: 4px 0 0; }
 .path { background: #f4f7fb; border: 1px solid var(--line); border-radius: 6px; padding: 10px; word-break: break-word; }
+.path-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 8px; }
 .cite { border-left: 3px solid var(--accent); padding: 6px 10px; background: #f8fafc; border-radius: 0 6px 6px 0; }
 .cite .src { color: var(--muted); font-size: 12px; }
 .formula { border-left: 3px solid var(--accent); padding: 6px 10px; background: #f8fafc; border-radius: 0 6px 6px 0; }

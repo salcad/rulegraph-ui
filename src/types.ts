@@ -25,6 +25,9 @@ export interface Figure {
   formula: string | null;
   inputs: FigureInput[] | null;
   graph_path: string | null;
+  // Runnable Cypher for the same traversal as graph_path. Optional: older static report exports
+  // predate this field, so the UI guards on its presence.
+  cypher?: string | null;
   citation: Citation | null;
   numeric_value: number | null;
 }
