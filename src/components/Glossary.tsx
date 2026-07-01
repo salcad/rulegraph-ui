@@ -48,15 +48,15 @@ const SECTIONS: Section[] = [
       },
       {
         term: "modified duration",
-        def: "A bond's price sensitivity to interest-rate moves, expressed in years. The portfolio figure is the market-value-weighted average across holdings.",
+        def: "A bond's price sensitivity to interest-rate moves, expressed in years. A modified duration of 5 means a 1 percentage point (100bp) rise in yield lowers the price by about 5%, that is about 0.05% per basis point. The unit is years because it derives from Macaulay duration, the weighted-average time until the bond's cash flows are received, so 5 can be read either as cash flows arriving on average about 5 years out or as the 5% price move per 100bp that DV01 builds on. The portfolio figure is the market-value-weighted average across holdings.",
       },
       {
         term: "DV01",
-        def: "Short for dollar value of 1 basis point. The change in portfolio value for a 1bp rate move, approximated as the sum of (market value times modified duration) times 0.0001.",
+        def: "Short for dollar value of 1 basis point (also PV01 or BPV, basis point value). The change in portfolio value for a 1bp (0.01%) rate move, expressed in currency (here SGD), approximated as the sum of (market value times modified duration) times 0.0001. For one position: modified duration 5, market value SGD 10,000,000, gives about 5 times 10,000,000 times 0.0001 = SGD 5,000 per basis point. Portfolio DV01 is that sum across all positions. It is the standard way to state interest-rate risk in absolute money terms.",
       },
       {
         term: "basis point (bp)",
-        def: "One hundredth of a percent, that is 0.0001. It appears in the DV01 figure and in Firm B's utilisation format.",
+        def: "One hundredth of a percent, that is 0.0001. It appears in the DV01 figure and in Firm B's utilisation format. Because 1 bp = 0.01%, converting a fraction to basis points multiplies by 10000 instead of 100: for example 0.58333 times 10000 = 5833.3, which Firm B then truncates to 5833 bps.",
       },
       {
         term: "status: OK, AT_LIMIT, BREACH, ERROR",
@@ -70,7 +70,7 @@ const SECTIONS: Section[] = [
       { term: "allocation %", def: "An asset class's market value as a percentage of NAV, tested against its min to max band (guidelines Section 2)." },
       { term: "non-IG aggregate", def: "Combined exposure to non-investment-grade instruments (High Yield plus Structured Credit) as a percent of NAV, capped at 20%." },
       { term: "IG and non-IG", def: "Investment Grade (rated BBB-/Baa3 or above) versus below it. Non-IG is riskier and capped in aggregate." },
-      { term: "fallen angel", def: "A bond downgraded from investment grade to below it. Under Firm B's convention these count toward the non-IG aggregate even if their asset class does not." },
+      { term: "fallen angel", def: "A bond that was issued as investment grade (IG) but has since been downgraded to below investment grade (high yield or junk, meaning BB+ or lower). The issuer was once considered a safe angel, then fell out of that tier. The bond itself did not change, the rating agencies' opinion of the issuer's creditworthiness did. The tricky part for compliance is that the bond often still sits in a portfolio bucket labeled by what it was at purchase. In this fund, Marina Bay Resorts was bought as an Investment Grade Corporate Bond and is still filed under that asset class, but its current rating is BB (downgraded from BBB-), so by asset class it looks IG while by current rating it is not. This is the crux of the reconfiguration test. Firm A decides a bond's contribution to the non-IG aggregate by its asset class, so Marina Bay does not count and the aggregate is 15.0% (OK). Firm B lets a bond's current rating override its asset class, so the fallen angel counts even though its asset class is Investment Grade Corporate Bonds, and adding Marina Bay's 6% pushes the aggregate to 21.0% (BREACH)." },
       { term: "single-issuer concentration", def: "The largest exposure to one corporate issuer as a percent of NAV, capped at 8% so the fund is not over-reliant on a single name." },
       { term: "GRE (government-related entity)", def: "An issuer linked to the government, such as a statutory board or GLC. It has its own concentration cap of 12%." },
       { term: "group concentration and parent rollup", def: "Concentration measured per issuer (Firm A) or per shared parent issuer (Firm B), so entities under one parent are tested together." },
@@ -99,7 +99,8 @@ const SECTIONS: Section[] = [
     terms: [
       { term: "Firm A and Firm B", def: "Two administrators of the same fund and holdings. Firm B differs on three house conventions, expressed as config, so switching firms changes no engine code." },
       { term: "include_fallen_angels", def: "Firm config flag for whether downgraded-below-IG positions count toward the non-IG aggregate. Firm B sets it on." },
-      { term: "gre group_by (issuer or parent_issuer)", def: "Whether GRE concentration is measured per issuer (Firm A) or per shared parent (Firm B)." },
+      { term: "gre_concentration", def: "The config section for the GRE (Government-Related Entity) concentration figure. A concentration limit caps how much of the portfolio can be exposed to any single government-related issuer (for example a state-owned bank or sovereign-backed agency)." },
+      { term: "gre group_by (issuer or parent_issuer)", def: "Tells the concentration calculator how to bucket positions before summing exposure and checking it against the limit. With issuer (Firm A), each individual legal issuer is measured on its own. With parent_issuer (Firm B), entities under one parent are rolled up and tested together." },
       { term: "utilization format (percent_1dp or truncated_bps)", def: "How utilisation is rendered: one-decimal percent (Firm A) or truncated basis points (Firm B)." },
     ],
   },

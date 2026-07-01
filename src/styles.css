@@ -190,12 +190,52 @@ tbody tr.selected { background: #eef4fb; }
 .banner { border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-weight: 600; }
 .banner.ok { background: var(--ok-bg); color: var(--ok); }
 .banner.bad { background: var(--breach-bg); color: var(--breach); }
+
+/* Reconciliation tab toolbar: re-run the pipeline live. */
+.recon-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.recon-toolbar button {
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.recon-toolbar button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.recon-toolbar button:disabled { opacity: 0.6; cursor: default; }
+
+/* Perturb-the-input panel: edit the holdings CSV, save, and re-run to break/restore reproduction. */
+.perturb { margin-bottom: 14px; }
+.perturb-toggle {
+  border: 0; background: none; padding: 4px 0; cursor: pointer; color: var(--accent);
+  font-size: 13px; font-weight: 600;
+}
+.perturb-body {
+  border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--panel);
+  margin-top: 8px;
+}
+.perturb-hint { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+.perturb-csv {
+  width: 100%; min-height: 200px; resize: vertical; padding: 10px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--bg); color: var(--ink); white-space: pre; overflow: auto;
+}
+.perturb-actions { display: flex; gap: 10px; margin-top: 10px; }
+.perturb-actions button {
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.perturb-actions button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.perturb-actions button:disabled { opacity: 0.6; cursor: default; }
+.perturb-error { margin-top: 10px; color: var(--breach); font-size: 13px; }
+.perturb-note { margin-top: 10px; color: var(--muted); font-size: 13px; }
 .error-box { background: var(--breach-bg); color: var(--breach); padding: 16px; border-radius: 8px; }
 
 /* Graph view */
-.graph-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
-.legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
-.legend-item i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.graph-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.legend-item {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted);
+  background: none; border: 1px solid transparent; border-radius: 6px; padding: 3px 8px;
+  cursor: pointer; font-family: inherit; line-height: 1.4;
+}
+.legend-item:hover { border-color: var(--border); }
+.legend-item-active { border-color: var(--border); background: var(--surface-2, #eef2f7); color: var(--text, #1c2530); font-weight: 600; }
+.legend-item i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
 .graph-wrap { padding: 0; overflow: hidden; position: relative; }
 .graph-svg { width: 100%; height: 600px; display: block; background: #fcfdfe; }
 

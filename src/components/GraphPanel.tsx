@@ -209,6 +209,9 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
   const [focused, setFocused] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [notFound, setNotFound] = useState<string | null>(null);
+  // A node type clicked in the legend: its nodes stay lit and the camera frames them, everything else
+  // dims. Clicking the same legend entry again clears it.
+  const [highlightType, setHighlightType] = useState<string | null>(null);
 
   // Zoom/pan over the whole picture. `pan` is in viewBox units, `zoom` is a scale factor.
   // Start framed on the whole graph so nothing overlaps or sits off-screen on first render.
@@ -226,6 +229,18 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     }
     return set;
   }, [hover, graph.edges]);
+
+  // Ids of the nodes whose type is highlighted from the legend, or null when nothing is highlighted.
+  const typeNodeIds = useMemo(() => {
+    if (!highlightType) return null;
+    const set = new Set<string>();
+    for (const n of graph.nodes) if (n.type === highlightType) set.add(n.id);
+    return set;
+  }, [highlightType, graph.nodes]);
+
+  // Which nodes are lit. Hovering a node (its neighbourhood) takes precedence while the pointer is over
+  // it; otherwise a legend selection lights that whole type; otherwise everything is lit.
+  const emphasis = neighbours ?? typeNodeIds;
 
   const nodeById = useMemo(() => {
     const m = new Map<string, GraphNode>();
@@ -302,6 +317,7 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     setFocused(null);
     setNotFound(null);
     setSelected(null);
+    setHighlightType(null);
   };
 
   // When the graph (and thus its layout) changes, snap positions and the camera back to the fresh
@@ -313,6 +329,7 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     setFocused(null);
     setNotFound(null);
     setSelected(null);
+    setHighlightType(null);
   }, [base, fit]);
 
   // Centre the view on the node a query refers to and ring it. Used by both the search box and the
@@ -335,6 +352,44 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     [graph.nodes, pos, zoom, height]
   );
 
+  // Highlight every node of a type (clicked in the legend) and frame the camera on them, so a type
+  // that's hard to spot — a lone red BreachAction among many — is found at a glance. Clicking the
+  // active type again clears the highlight and leaves the view where it is.
+  const locateType = useCallback(
+    (type: string) => {
+      if (highlightType === type) {
+        setHighlightType(null);
+        return;
+      }
+      setHighlightType(type);
+      setNotFound(null);
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const n of graph.nodes) {
+        if (n.type !== type) continue;
+        const p = pos[n.id];
+        if (!p) continue;
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      }
+      if (!Number.isFinite(minX)) return;
+      const pad = 80;
+      const w = maxX - minX || 1;
+      const h = maxY - minY || 1;
+      // Frame the matches, but never zoom past LOCATE_ZOOM so a single node doesn't fill the canvas.
+      const next = clampZoom(Math.min((WIDTH - 2 * pad) / w, (height - 2 * pad) / h, LOCATE_ZOOM));
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      setZoom(next);
+      setPan({ x: WIDTH / 2 - cx * next, y: height / 2 - cy * next });
+    },
+    [graph.nodes, pos, height, highlightType]
+  );
+
   // React to an external locate request (e.g. a chunk_id clicked in the traceability table).
   useEffect(() => {
     if (focus && focus.label) {
@@ -354,9 +409,15 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
     <div>
       <div className="graph-legend">
         {types.map((t) => (
-          <span key={t} className="legend-item">
+          <button
+            key={t}
+            type="button"
+            className={`legend-item${highlightType === t ? " legend-item-active" : ""}`}
+            onClick={() => locateType(t)}
+            title={highlightType === t ? `Clear ${t} highlight` : `Highlight ${t} nodes`}
+          >
             <i style={{ background: colorFor(t) }} /> {t}
-          </span>
+          </button>
         ))}
       </div>
 
@@ -408,7 +469,7 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
             const a = pos[e.source];
             const b = pos[e.target];
             if (!a || !b) return null;
-            const active = !neighbours || (neighbours.has(e.source) && neighbours.has(e.target));
+            const active = !emphasis || (emphasis.has(e.source) && emphasis.has(e.target));
             return (
               <line
                 key={i}
@@ -425,7 +486,7 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
           {graph.nodes.map((node) => {
             const p = pos[node.id];
             if (!p) return null;
-            const active = !neighbours || neighbours.has(node.id);
+            const active = !emphasis || emphasis.has(node.id);
             return (
               <g
                 key={node.id}
@@ -448,6 +509,9 @@ export function GraphPanel({ graph, height = 600, showHint = true, focus = null 
                 onMouseEnter={() => setHover(node.id)}
                 onMouseLeave={() => setHover(null)}
               >
+                {typeNodeIds?.has(node.id) && focused !== node.id && selected !== node.id && (
+                  <circle r={11} fill="none" stroke={colorFor(node.type)} strokeWidth={2} opacity={0.7} />
+                )}
                 {focused === node.id && (
                   <circle className="graph-node-focus-ring" r={13} fill="none" stroke={colorFor(node.type)} strokeWidth={2} />
                 )}

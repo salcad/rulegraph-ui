@@ -86,6 +86,11 @@ export function App() {
   const [graph, setGraph] = useState<GraphView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Whether the on-screen bundle came from a live pipeline run or the exported static fallback.
+  const [source, setSource] = useState<"live" | "static" | null>(null);
+  // Bumped by the Reconciliation tab's "Re-run pipeline" button to force a fresh live run of the
+  // current firm/extractor, so reproduction can be demonstrated on demand.
+  const [reloadNonce, setReloadNonce] = useState(0);
   // The LLM prompt/reply popup, shown after an LLM run loads so the operator sees exactly what was
   // asked and answered before reading the figures.
   const [llmExchange, setLlmExchange] = useState<LlmExchange | null>(null);
@@ -112,17 +117,18 @@ export function App() {
     // Keep the previous report on screen while the next one loads so the page never blanks out — the
     // LLM run in particular can take many seconds, and an overlay is shown over the stale view.
     loadReport(firm, extractor)
-      .then(({ bundle: b, source }) => {
+      .then(({ bundle: b, source: s }) => {
         if (!active) return;
         setBundle(b);
-        setLlmExchange(llmPopupFor(extractor, source, b));
+        setSource(s);
+        setLlmExchange(llmPopupFor(extractor, s, b));
       })
       .catch((e) => active && setError(String(e)))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
-  }, [firm, extractor]);
+  }, [firm, extractor, reloadNonce]);
 
   // The only extractor the viewer runs is the LLM one, which calls a frontier model and can take a while.
   const loadingMessage = {
@@ -219,7 +225,14 @@ export function App() {
       </nav>
 
       {tab === "figures" && <FiguresTable figures={bundle.figures} />}
-      {tab === "reconciliation" && <ReconciliationView report={bundle.reconciliation} />}
+      {tab === "reconciliation" && (
+        <ReconciliationView
+          report={bundle.reconciliation}
+          onRerun={() => setReloadNonce((n) => n + 1)}
+          running={loading}
+          source={source ?? undefined}
+        />
+      )}
       {tab === "traceability" && <TraceabilityView report={bundle.traceability} graph={graph} />}
       {tab === "firewall" && <FirewallView firewall={bundle.firewall} />}
       {tab === "audit" && <AuditView events={bundle.audit} />}

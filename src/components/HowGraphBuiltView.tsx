@@ -23,6 +23,9 @@ const PIPELINE = `seed_rules.json ──► SeedRuleExtractor ──► RuleInte
    (raw text)        (loads resource)      (JSON → RuleIntent,       (orchestrates)      (Cypher MERGE writes)
                                             gates + provenance)`;
 
+const INGEST_SNIPPET = `String chunkId = Hashing.chunkId(page, passage);   // e.g. "chunk_1cc8"
+chunks.add(new GuidelineChunk(chunkId, page, passage, summarize(passage), prov));`;
+
 const SEED_SNIPPET = `{ "rule_type": "ALLOCATION_LIMIT",
   "target_code": "singapore_government_securities",
   "formula_key": "ALLOCATION_PERCENT",
@@ -84,19 +87,64 @@ export function HowGraphBuiltView() {
                 the same graph node and silently overwrite each other&apos;s limits, and the figure
                 would be checked against the wrong number. (Gate G1b.)
               </li>
+              <li>
+                <strong>It records where each rule came from.</strong> Every entry carries a citation
+                back to the guideline passage that justifies it: a live LLM emits a{" "}
+                <span className="mono">source_chunk_id</span> (validated against the chunks actually
+                parsed from the PDF), while the frozen seed file carries a{" "}
+                <span className="mono">source_keyword</span> matched to the first chunk whose text
+                contains it. Either way the rule ends up anchored to a real passage. If neither
+                resolves, the rule is marked <span className="mono">chunk_unresolved</span> so it
+                surfaces as untraceable rather than carrying a made-up citation. (This is the{" "}
+                <em>provenance</em> in the diagram above; the mechanics are in section (b) below.)
+              </li>
             </ul>
           </li>
           <li>
             <strong>Orchestrate.</strong> <span className="mono">IngestionService</span> parses the
             PDF into chunks and the CSV into positions, runs the extractor, then calls{" "}
-            <span className="mono">graphBuilder.build(chunks, intents, positions)</span>.
+            <span className="mono">graphBuilder.build(chunks, intents, positions)</span>. This hop is
+            also where the <span className="mono">chunk_id</span> comes from, which answers a question
+            the seed file leaves open: there is no <span className="mono">chunk_id</span> anywhere in{" "}
+            <span className="mono">seed_rules.json</span>, because ids are not written by hand.
+            <ul className="how-sublist">
+              <li>
+                <strong>Each PDF passage is hashed into a stable id.</strong> As{" "}
+                <span className="mono">GuidelinePdfParser</span> walks the pages it calls{" "}
+                <span className="mono">Hashing.chunkId(page, passage)</span>, producing a deterministic
+                id such as <span className="mono">chunk_1cc8</span> from the passage text itself. Same
+                PDF in, same id out, so the ids are reproducible across runs rather than assigned by
+                position or a counter.
+                <pre className="how-code mono">{INGEST_SNIPPET}</pre>
+                So <span className="mono">chunk_1cc8</span> (the id selected in{" "}
+                <span className="mono">TraceCypherTest</span>) is a deterministic hash of a specific
+                PDF passage. This is where ids are born: same PDF in, same id out (constraint 1,
+                reproducibility).
+              </li>
+              <li>
+                <strong>The rule borrows one of those ids, it does not carry its own.</strong> This is
+                why the seed file ships a <span className="mono">source_keyword</span> instead: the
+                mapper (hop 2) resolves that keyword to the id of the first chunk whose text contains
+                it, so the rule ends up anchored to a real, freshly-hashed{" "}
+                <span className="mono">chunk_id</span> even after the PDF is re-parsed.
+              </li>
+            </ul>
           </li>
           <li>
             <strong>Write to Neo4j.</strong> <span className="mono">GraphBuilderService</span> builds
             the whole graph in one transaction, in a fixed order: first it clears whatever was there,
-            then writes the guideline chunks, then each rule, then each holding. Three details are
+            then writes the guideline chunks, then each rule, then each holding. Four details are
             what make the result trustworthy:
             <ul className="how-sublist">
+              <li>
+                <strong>The guideline chunks become nodes keyed by their hashed id.</strong> Each
+                chunk from hop 3 is written as a{" "}
+                <span className="mono">GuidelineChunk {"{chunk_id: ...}"}</span> node (with its page,
+                text, and summary). That id-keyed node is the exact target every rule&apos;s{" "}
+                <span className="mono">DEFINED_BY</span> edge points at, which is how a{" "}
+                <span className="mono">chunk_id</span> ends up as a real graph property and how the
+                trace reaches an actual passage rather than a label.
+              </li>
               <li>
                 <strong>It clears the graph first.</strong> The build opens with{" "}
                 <span className="mono">MATCH (n) DETACH DELETE n</span>, which deletes every node and

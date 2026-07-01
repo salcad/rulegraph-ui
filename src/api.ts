@@ -103,6 +103,39 @@ export function sourceFileUrl(name: "holdings" | "formulas"): string {
   return `${API_BASE}/rulegraph-api/source/${name}`;
 }
 
+/** Loads the current holdings CSV text (the exact file the pipeline ingests), for the demo editor. */
+export async function loadHoldingsCsv(): Promise<string> {
+  const res = await fetch(sourceFileUrl("holdings"));
+  if (!res.ok) {
+    throw new Error(`Could not load the holdings CSV (${res.status})`);
+  }
+  return res.text();
+}
+
+/**
+ * Overwrites the holdings CSV with an edited version. The engine validates it parses the way the
+ * pipeline expects and returns a 400 with a readable reason otherwise, which we surface to the editor.
+ */
+export async function saveHoldingsCsv(csv: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/rulegraph-api/source/holdings`, {
+    method: "PUT",
+    headers: { "Content-Type": "text/csv" },
+    body: csv,
+  });
+  if (!res.ok) {
+    const reason = (await res.text()) || `${res.status}`;
+    throw new Error(reason);
+  }
+}
+
+/** Restores the holdings CSV to the snapshot the engine took before the first edit. */
+export async function restoreHoldingsCsv(): Promise<void> {
+  const res = await fetch(`${API_BASE}/rulegraph-api/source/holdings/restore`, { method: "POST" });
+  if (!res.ok) {
+    throw new Error(`Could not restore the holdings CSV (${res.status})`);
+  }
+}
+
 /** Turns a figure code such as aggregate_non_ig_exposure into a readable label. */
 export function readable(code: string): string {
   return code
